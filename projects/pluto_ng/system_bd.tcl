@@ -92,7 +92,8 @@ set_property -dict [list CONFIG.PSU__DISPLAYPORT__PERIPHERAL__ENABLE {1} \
 ad_ip_parameter sys_ps8 CONFIG.PSU__DDRC__SPEED_BIN {DDR4_2133P}
 set_property -dict [list CONFIG.SUBPRESET1 {Custom} \
                          CONFIG.PSU__CRF_APB__DDR_CTRL__FREQMHZ {1066} \
-                         CONFIG.PSU__DDRC__ROW_ADDR_COUNT {14} \
+                         CONFIG.PSU__DDRC__DEVICE_CAPACITY {8192 MBits} \
+                         CONFIG.PSU__DDRC__ROW_ADDR_COUNT {16} \
                          CONFIG.PSU__DDRC__BUS_WIDTH {32 Bit} \
                          CONFIG.PSU__DDRC__DRAM_WIDTH {16 Bits} \
                          CONFIG.PSU__DDRC__BG_ADDR_COUNT {1} \

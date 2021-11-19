@@ -15,11 +15,11 @@ if [info exists ::env(ADI_PLUTO_FPGA)] {
 
 set sys_zynq 2
 
-adi_project pluto2
+adi_project pluto_ng
 
-adi_project_files pluto2 [list \
+adi_project_files pluto_ng [list \
   "system_top.v" \
   "system_constr.xdc" \
   "$ad_hdl_dir/library/common/ad_iobuf.v" ]
 
-adi_project_run pluto2
+adi_project_run pluto_ng

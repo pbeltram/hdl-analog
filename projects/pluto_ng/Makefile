@@ -3,7 +3,7 @@
 ## Auto-generated, do not modify!
 ####################################################################################
 
-PROJECT_NAME := pluto2
+PROJECT_NAME := pluto_ng
 
 M_DEPS += system_constr.xdc
 M_DEPS += system_top.v
