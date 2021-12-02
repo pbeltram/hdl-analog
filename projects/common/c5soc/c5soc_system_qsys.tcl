@@ -170,22 +170,89 @@ add_connection sys_clk.clk_reset vga_pll.reset
 
 # display (vga-frame-reader)
 
-add_instance vga_frame_reader alt_vip_vfr
-set_instance_parameter_value vga_frame_reader {BITS_PER_PIXEL_PER_COLOR_PLANE} {8}
-set_instance_parameter_value vga_frame_reader {NUMBER_OF_CHANNELS_IN_PARALLEL} {4}
-set_instance_parameter_value vga_frame_reader {NUMBER_OF_CHANNELS_IN_SEQUENCE} {1}
-set_instance_parameter_value vga_frame_reader {MAX_IMAGE_WIDTH} {1360}
-set_instance_parameter_value vga_frame_reader {MAX_IMAGE_HEIGHT} {768}
-set_instance_parameter_value vga_frame_reader {MEM_PORT_WIDTH} {128}
-set_instance_parameter_value vga_frame_reader {RMASTER_FIFO_DEPTH} {64}
-set_instance_parameter_value vga_frame_reader {RMASTER_BURST_TARGET} {32}
+add_instance vga_frame_reader alt_vip_cl_vfb 20.1
+set_instance_parameter_value vga_frame_reader {BITS_PER_SYMBOL} {8}
+set_instance_parameter_value vga_frame_reader {BURST_ALIGNMENT} {1}
 set_instance_parameter_value vga_frame_reader {CLOCKS_ARE_SEPARATE} {1}
-add_connection sys_clk.clk vga_frame_reader.clock_master
-add_connection sys_clk.clk_reset vga_frame_reader.clock_master_reset
-add_connection vga_frame_reader.avalon_master sys_hps.f2h_sdram0_data
-set_connection_parameter_value vga_frame_reader.avalon_master/sys_hps.f2h_sdram0_data baseAddress {0x0000}
-add_connection vga_pll.outclk0 vga_frame_reader.clock_reset
-add_connection sys_clk.clk_reset vga_frame_reader.clock_reset_reset
+set_instance_parameter_value vga_frame_reader {COLOR_PLANES_ARE_IN_PARALLEL} {1}
+set_instance_parameter_value vga_frame_reader {CONTROLLED_DROP_REPEAT} {0}
+set_instance_parameter_value vga_frame_reader {DROP_FRAMES} {0}
+set_instance_parameter_value vga_frame_reader {DROP_INVALID_FIELDS} {0}
+set_instance_parameter_value vga_frame_reader {DROP_REPEAT_USER} {0}
+set_instance_parameter_value vga_frame_reader {INTERLACED_SUPPORT} {0}
+set_instance_parameter_value vga_frame_reader {IS_FRAME_READER} {1}
+set_instance_parameter_value vga_frame_reader {IS_FRAME_WRITER} {0}
+set_instance_parameter_value vga_frame_reader {IS_SYNC_MASTER} {0}
+set_instance_parameter_value vga_frame_reader {IS_SYNC_SLAVE} {0}
+set_instance_parameter_value vga_frame_reader {LINE_BASED_BUFFERING} {0}
+set_instance_parameter_value vga_frame_reader {MAX_HEIGHT} {768}
+set_instance_parameter_value vga_frame_reader {MAX_SYMBOLS_PER_PACKET} {10}
+set_instance_parameter_value vga_frame_reader {MAX_WIDTH} {1360}
+set_instance_parameter_value vga_frame_reader {MEM_BASE_ADDR} {0}
+set_instance_parameter_value vga_frame_reader {MEM_BUFFER_OFFSET} {16777216}
+set_instance_parameter_value vga_frame_reader {MEM_PORT_WIDTH} {128}
+set_instance_parameter_value vga_frame_reader {MULTI_FRAME_DELAY} {1}
+set_instance_parameter_value vga_frame_reader {NUMBER_OF_COLOR_PLANES} {4}
+set_instance_parameter_value vga_frame_reader {PIXELS_IN_PARALLEL} {1}
+set_instance_parameter_value vga_frame_reader {PRIORITIZE_FMAX} {0}
+set_instance_parameter_value vga_frame_reader {READER_RUNTIME_CONTROL} {1}
+set_instance_parameter_value vga_frame_reader {READY_LATENCY} {1}
+set_instance_parameter_value vga_frame_reader {READ_BURST_TARGET} {32}
+set_instance_parameter_value vga_frame_reader {READ_FIFO_DEPTH} {64}
+set_instance_parameter_value vga_frame_reader {REPEAT_FRAMES} {0}
+set_instance_parameter_value vga_frame_reader {TEST_INIT} {0}
+set_instance_parameter_value vga_frame_reader {USER_PACKETS_MAX_STORAGE} {0}
+set_instance_parameter_value vga_frame_reader {USE_BUFFER_OFFSET} {0}
+set_instance_parameter_value vga_frame_reader {WRITER_RUNTIME_CONTROL} {0}
+set_instance_parameter_value vga_frame_reader {WRITE_BURST_TARGET} {32}
+set_instance_parameter_value vga_frame_reader {WRITE_FIFO_DEPTH} {64}
+
+
+
+
+add_connection vga_pll.outclk0 vga_frame_reader.main_clock
+#add_connection sys_clk.clk vga_frame_reader.main_clock
+
+#add_connection sys_clk.clk_reset vga_frame_reader.main_reset
+add_connection sys_clk.clk_reset vga_frame_reader.main_reset
+
+
+
+#add_connection vga_pll.outclk0 vga_frame_reader.mem_clock
+add_connection vga_pll.outclk0 vga_frame_reader.mem_clock
+
+#add_connection sys_clk.clk_reset vga_frame_reader.mem_reset
+add_connection sys_clk.clk_reset vga_frame_reader.mem_reset
+
+
+
+
+add_connection sys_hps.h2f_lw_axi_master vga_frame_reader.control
+set_connection_parameter_value sys_hps.h2f_lw_axi_master/vga_frame_reader.control arbitrationPriority {1}
+set_connection_parameter_value sys_hps.h2f_lw_axi_master/vga_frame_reader.control baseAddress {0x0000}
+set_connection_parameter_value sys_hps.h2f_lw_axi_master/vga_frame_reader.control defaultConnection {0}
+
+
+
+
+
+
+add_connection vga_frame_reader.mem_master_rd sys_hps.f2h_sdram0_data
+set_connection_parameter_value vga_frame_reader.mem_master_rd/sys_hps.f2h_sdram0_data arbitrationPriority {1}
+set_connection_parameter_value vga_frame_reader.mem_master_rd/sys_hps.f2h_sdram0_data baseAddress {0x0000}
+set_connection_parameter_value vga_frame_reader.mem_master_rd/sys_hps.f2h_sdram0_data defaultConnection {0}
+
+
+#add_connection sys_clk.clk vga_frame_reader.clock_master -done 
+#add_connection sys_clk.clk_reset vga_frame_reader.clock_master_reset 
+
+#add_connection vga_frame_reader.avalon_master sys_hps.f2h_sdram0_data
+#set_connection_parameter_value vga_frame_reader.avalon_master/sys_hps.f2h_sdram0_data baseAddress {0x0000}
+#add_connection vga_pll.outclk0 vga_frame_reader.clock_reset
+#add_connection sys_clk.clk_reset vga_frame_reader.clock_reset_reset
+
+
+
 
 # display (vga-out-clock)
 
@@ -197,47 +264,60 @@ set_interface_property vga_out_clk EXPORT_OF vga_out_clock.out_clk
 
 # display (vga-out-data)
 
-add_instance vga_out_data alt_vip_itc
-set_instance_parameter_value vga_out_data {H_ACTIVE_PIXELS} {1360}
-set_instance_parameter_value vga_out_data {V_ACTIVE_LINES} {768}
-set_instance_parameter_value vga_out_data {BPS} {8}
-set_instance_parameter_value vga_out_data {NUMBER_OF_COLOUR_PLANES} {4}
-set_instance_parameter_value vga_out_data {COLOUR_PLANES_ARE_IN_PARALLEL} {1}
+add_instance vga_out_data alt_vip_cl_cvo 20.1
 set_instance_parameter_value vga_out_data {ACCEPT_COLOURS_IN_SEQ} {0}
-set_instance_parameter_value vga_out_data {INTERLACED} {0}
-set_instance_parameter_value vga_out_data {USE_EMBEDDED_SYNCS} {0}
-set_instance_parameter_value vga_out_data {AP_LINE} {0}
+set_instance_parameter_value vga_out_data {ACCEPT_SYNC} {0}
 set_instance_parameter_value vga_out_data {ANC_LINE} {0}
-set_instance_parameter_value vga_out_data {H_BLANK} {0}
-set_instance_parameter_value vga_out_data {V_BLANK} {0}
-set_instance_parameter_value vga_out_data {H_SYNC_LENGTH} {112}
-set_instance_parameter_value vga_out_data {H_FRONT_PORCH} {64}
-set_instance_parameter_value vga_out_data {H_BACK_PORCH} {256}
-set_instance_parameter_value vga_out_data {V_SYNC_LENGTH} {6}
-set_instance_parameter_value vga_out_data {V_FRONT_PORCH} {3}
-set_instance_parameter_value vga_out_data {V_BACK_PORCH} {18}
-set_instance_parameter_value vga_out_data {F_RISING_EDGE} {0}
-set_instance_parameter_value vga_out_data {F_FALLING_EDGE} {0}
-set_instance_parameter_value vga_out_data {FIELD0_V_RISING_EDGE} {0}
-set_instance_parameter_value vga_out_data {FIELD0_ANC_LINE} {0}
-set_instance_parameter_value vga_out_data {FIELD0_V_BLANK} {0}
-set_instance_parameter_value vga_out_data {FIELD0_V_SYNC_LENGTH} {0}
-set_instance_parameter_value vga_out_data {FIELD0_V_FRONT_PORCH} {0}
-set_instance_parameter_value vga_out_data {FIELD0_V_BACK_PORCH} {0}
-set_instance_parameter_value vga_out_data {FIFO_DEPTH} {1920}
-set_instance_parameter_value vga_out_data {THRESHOLD} {1919}
+set_instance_parameter_value vga_out_data {AP_LINE} {0}
+set_instance_parameter_value vga_out_data {BPS} {8}
 set_instance_parameter_value vga_out_data {CLOCKS_ARE_SAME} {0}
-set_instance_parameter_value vga_out_data {USE_CONTROL} {0}
+set_instance_parameter_value vga_out_data {COLOUR_PLANES_ARE_IN_PARALLEL} {1}
+set_instance_parameter_value vga_out_data {CONTEXT_WIDTH} {8}
+set_instance_parameter_value vga_out_data {COUNT_STEP_IS_PIP_VALUE} {0}
+set_instance_parameter_value vga_out_data {DST_WIDTH} {8}
+set_instance_parameter_value vga_out_data {FIELD0_ANC_LINE} {0}
+set_instance_parameter_value vga_out_data {FIELD0_V_BACK_PORCH} {0}
+set_instance_parameter_value vga_out_data {FIELD0_V_BLANK} {0}
+set_instance_parameter_value vga_out_data {FIELD0_V_FRONT_PORCH} {0}
+set_instance_parameter_value vga_out_data {FIELD0_V_RISING_EDGE} {0}
+set_instance_parameter_value vga_out_data {FIELD0_V_SYNC_LENGTH} {0}
+set_instance_parameter_value vga_out_data {FIFO_DEPTH} {1920}
+set_instance_parameter_value vga_out_data {F_FALLING_EDGE} {0}
+set_instance_parameter_value vga_out_data {F_RISING_EDGE} {0}
 set_instance_parameter_value vga_out_data {GENERATE_SYNC} {0}
+set_instance_parameter_value vga_out_data {H_ACTIVE_PIXELS} {1360}
+set_instance_parameter_value vga_out_data {H_BACK_PORCH} {256}
+set_instance_parameter_value vga_out_data {H_BLANK} {0}
+set_instance_parameter_value vga_out_data {H_FRONT_PORCH} {64}
+set_instance_parameter_value vga_out_data {H_SYNC_LENGTH} {112}
+set_instance_parameter_value vga_out_data {INTERLACED} {0}
+set_instance_parameter_value vga_out_data {LOW_LATENCY} {0}
+set_instance_parameter_value vga_out_data {NO_OF_CHANNELS} {1}
 set_instance_parameter_value vga_out_data {NO_OF_MODES} {1}
+set_instance_parameter_value vga_out_data {NUMBER_OF_COLOUR_PLANES} {4}
+set_instance_parameter_value vga_out_data {PIXELS_IN_PARALLEL} {1}
+set_instance_parameter_value vga_out_data {SRC_WIDTH} {8}
 set_instance_parameter_value vga_out_data {STD_WIDTH} {1}
-add_connection vga_pll.outclk0 vga_out_data.is_clk_rst
-add_connection sys_clk.clk_reset vga_out_data.is_clk_rst_reset
-add_connection vga_frame_reader.avalon_streaming_source vga_out_data.din
-add_interface vga_out_data conduit end
+set_instance_parameter_value vga_out_data {TASK_WIDTH} {8}
+set_instance_parameter_value vga_out_data {THRESHOLD} {1919}
+set_instance_parameter_value vga_out_data {USE_CONTROL} {0}
+set_instance_parameter_value vga_out_data {USE_EMBEDDED_SYNCS} {0}
+set_instance_parameter_value vga_out_data {V_ACTIVE_LINES} {768}
+set_instance_parameter_value vga_out_data {V_BACK_PORCH} {18}
+set_instance_parameter_value vga_out_data {V_BLANK} {0}
+set_instance_parameter_value vga_out_data {V_FRONT_PORCH} {3}
+set_instance_parameter_value vga_out_data {V_SYNC_LENGTH} {6}
+
+add_connection sys_clk.clk_reset vga_out_data.main_reset
+add_connection vga_pll.outclk0 vga_out_data.main_clock
+
+add_connection vga_frame_reader.dout vga_out_data.din
+add_interface vga_out_data_clocked_video conduit end
+
 set_interface_property vga_out_data EXPORT_OF vga_out_data.clocked_video
 
 # id
+
 
 add_instance sys_id altera_avalon_sysid_qsys
 set_instance_parameter_value sys_id {id} {-1395322110}
@@ -309,12 +389,11 @@ set_interface_property pr_rom_data_nc EXPORT_OF axi_sysid_0.if_pr_rom_data
 
 ad_cpu_interrupt 0 sys_gpio_bd.irq
 ad_cpu_interrupt 1 sys_spi.irq
-ad_cpu_interrupt 4 vga_frame_reader.interrupt_sender
+ad_cpu_interrupt 5 vga_frame_reader.control_interrupt
 
 # cpu interconnects
 
 ad_cpu_interconnect 0x00108000 sys_spi.spi_control_port
-ad_cpu_interconnect 0x00009000 vga_frame_reader.avalon_slave
 ad_cpu_interconnect 0x00010000 sys_id.control_slave
 ad_cpu_interconnect 0x00010080 sys_gpio_bd.s1
 ad_cpu_interconnect 0x00010100 sys_gpio_in.s1
