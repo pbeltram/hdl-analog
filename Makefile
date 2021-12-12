@@ -26,7 +26,7 @@ SUBPROJECTS := $(foreach projname,$(PROJECTS), \
 	$(foreach archname,$(notdir $(subst /Makefile,,$(wildcard projects/$(projname)/*/Makefile))), \
 		$(projname).$(archname)))
 
-.PHONY: lib all clean clean-ipcache clean-all $(SUBPROJECTS)
+.PHONY: lib all clean clean-ipcache clean-all clean-lib $(SUBPROJECTS)
 
 $(SUBPROJECTS):
 	$(MAKE) -C projects/$(subst .,/,$@)
@@ -41,6 +41,9 @@ all:
 
 clean:
 	$(MAKE) -C projects/ clean
+
+clean-lib:
+	$(MAKE) -C library/ clean
 
 clean-ipcache:
 	$(call clean, \
