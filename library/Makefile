@@ -129,6 +129,8 @@ clean:
 	$(MAKE) -C xilinx/axi_xcvrlb clean
 	$(MAKE) -C xilinx/util_adxcvr clean
 	$(MAKE) -C xilinx/util_clkdiv clean
+	$(MAKE) -C util_pack/util_cpack clean
+	$(MAKE) -C util_pack/util_upack clean
 
 	$(MAKE) -C interfaces clean
 
@@ -253,6 +255,8 @@ lib:
 	$(MAKE) -C xilinx/axi_xcvrlb
 	$(MAKE) -C xilinx/util_adxcvr
 	$(MAKE) -C xilinx/util_clkdiv
+	$(MAKE) -C util_pack/util_cpack
+	$(MAKE) -C util_pack/util_upack
 
 	$(MAKE) -C interfaces
 
