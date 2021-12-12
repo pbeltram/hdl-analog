@@ -96,4 +96,6 @@ _vmake
 *.gen*
 *.xsa
 *.pdi
-
+#
+*.org
+NA/
