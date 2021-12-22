@@ -4,13 +4,9 @@
 ## Auto-generated, do not modify!
 ####################################################################################
 
-PROJECT_NAME := pzsdr_lvds
+PROJECT_NAME := pzsdr1_lvds
 
 M_DEPS += pzsdr1_constr_lvds.xdc
-M_DEPS += pzsdr1_constr.xdc
-M_DEPS += pzsdr1_bd.tcl
-M_DEPS += ccbrk_constr.xdc
-M_DEPS += ccbrk_bd.tcl
 M_DEPS += ../../library/common/ad_iobuf.v
 M_DEPS += ../../library/axi_ad9361/axi_ad9361_delay.tcl
 
