@@ -6,7 +6,8 @@
 
 PROJECT_NAME := pzsdr1_lvds
 
-M_DEPS += pzsdr1_constr_lvds.xdc
+M_DEPS += pzsdr1_lvds.xdc
+M_DEPS += pzsdr1_lvds_pins.xdc
 M_DEPS += ../../library/common/ad_iobuf.v
 M_DEPS += ../../library/axi_ad9361/axi_ad9361_delay.tcl
 
