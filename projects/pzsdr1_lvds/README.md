@@ -4,7 +4,7 @@ This folder contains the PZSDR1 SOM projects for PZSDRCC-BRK-C carrier board.
 
 ## Building, Generating Bit Files
 
-[pzsdr_lvds] make  
+[pzsdr1_lvds] make  
 
 The above builds PZSDRCC-BRK-C hardware bit files in LVDS mode.  
 

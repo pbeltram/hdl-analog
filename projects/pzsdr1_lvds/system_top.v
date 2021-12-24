@@ -65,8 +65,6 @@ module system_top (
   inout           iic_scl,
   inout           iic_sda,
 
-  inout   [10:0]  gpio_bd,
-
   input           rx_clk_in_p,
   input           rx_clk_in_n,
   input           rx_frame_in_p,
@@ -85,6 +83,8 @@ module system_top (
   input           clkout_in,
   output          clkout_out,
 
+  inout   [10:0]  gpio_bd,
+
   inout           gpio_clksel,
   inout           gpio_resetb,
   inout           gpio_sync,
@@ -98,7 +98,8 @@ module system_top (
   input           spi_miso,
 
   output  [27:0]  gp_out,
-  input   [27:0]  gp_in);
+  input   [27:0]  gp_in
+);
 
 
   // internal signals
@@ -174,44 +175,18 @@ module system_top (
     .gpio_t (gpio_t),
     .iic_main_scl_io (iic_scl),
     .iic_main_sda_io (iic_sda),
-    .otg_vbusoc (1'b0),
-    .ps_intr_00 (1'b0),
-    .ps_intr_01 (1'b0),
-    .ps_intr_02 (1'b0),
-    .ps_intr_03 (1'b0),
-    .ps_intr_04 (1'b0),
-    .ps_intr_05 (1'b0),
-    .ps_intr_06 (1'b0),
-    .ps_intr_07 (1'b0),
-    .ps_intr_08 (1'b0),
-    .ps_intr_09 (1'b0),
-    .ps_intr_10 (1'b0),
-    .ps_intr_11 (1'b0),
-    .ps_intr_15 (1'b0),
     .rx_clk_in_n (rx_clk_in_n),
     .rx_clk_in_p (rx_clk_in_p),
     .rx_data_in_n (rx_data_in_n),
     .rx_data_in_p (rx_data_in_p),
     .rx_frame_in_n (rx_frame_in_n),
     .rx_frame_in_p (rx_frame_in_p),
-    .spi0_clk_i (1'b0),
     .spi0_clk_o (spi_clk),
     .spi0_csn_0_o (spi_csn),
     .spi0_csn_1_o (),
     .spi0_csn_2_o (),
-    .spi0_csn_i (1'b1),
     .spi0_sdi_i (spi_miso),
-    .spi0_sdo_i (1'b0),
     .spi0_sdo_o (spi_mosi),
-    .spi1_clk_i (1'b0),
-    .spi1_clk_o (),
-    .spi1_csn_0_o (),
-    .spi1_csn_1_o (),
-    .spi1_csn_2_o (),
-    .spi1_csn_i (1'b1),
-    .spi1_sdi_i (1'b0),
-    .spi1_sdo_i (1'b0),
-    .spi1_sdo_o (),
     .tdd_sync_i (1'b0),
     .tdd_sync_o (),
     .tdd_sync_t (),
