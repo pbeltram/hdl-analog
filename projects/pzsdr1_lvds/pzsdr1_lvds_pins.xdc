@@ -44,7 +44,7 @@ create_clock -name ad9361_clk   -period  8 [get_pins i_system_wrapper/system_i/a
 ## constraints (ccbrk.c + ccbrk_lb.a)
 ## ad9361 clkout forward
 
-set_property  -dict {PACKAGE_PIN  W16     IOSTANDARD  LVCMOS25} [get_ports  clkout_out]   ; ## (lb: none)         U1,W16,IO_L18_34_JX4_N,JX4,70,IO_L18_34_JX4_N,P7,32
+set_property  -dict {PACKAGE_PIN  W16     IOSTANDARD  LVCMOS25} [get_ports  clkout_out]   ; ## (lb: none)         U1,W16,IO_L18_34_JX4_N,JX4,70,IO_L18_34_JX4_N,P7,32 (P3,Pin3,Fan Plug)
 
 ## push-buttons- led- dip-switches- loopbacks- (ps7 gpio)
 
@@ -55,10 +55,10 @@ set_property  -dict {PACKAGE_PIN  Y19     IOSTANDARD  LVCMOS25} [get_ports  gpio
 
 ## orphans- io- (ps7 gpio)
 
-set_property  -dict {PACKAGE_PIN  V5      IOSTANDARD  LVCMOS25} [get_ports  gpio_bd[4]]   ; ## (lb: none)         U1,V5,IO_L06_13_JX2_P,JX2,18,IO_L06_13_JX2_P
+set_property  -dict {PACKAGE_PIN  V5      IOSTANDARD  LVCMOS25} [get_ports  gpio_bd[4]]   ; ## (lb: none)         U1,V5,IO_L06_13_JX2_P,JX2,18,IO_L06_13_JX2_P,P2,13
 set_property  -dict {PACKAGE_PIN  V11     IOSTANDARD  LVCMOS25} [get_ports  gpio_bd[5]]   ; ## (lb: none)         U1,V11,IO_L21_13_JX2_P,JX2,67,IO_L21_13_JX2_P,P2,52
 set_property  -dict {PACKAGE_PIN  V10     IOSTANDARD  LVCMOS25} [get_ports  gpio_bd[6]]   ; ## (lb: none)         U1,V10,IO_L21_13_JX2_N,JX2,69,IO_L21_13_JX2_N,P2,54
-set_property  -dict {PACKAGE_PIN  V16     IOSTANDARD  LVCMOS25} [get_ports  gpio_bd[7]]   ; ## (lb: none)         U1,V16,IO_L18_34_JX4_P,JX4,68,IO_L18_34_JX4_P,P7,30
+set_property  -dict {PACKAGE_PIN  V16     IOSTANDARD  LVCMOS25} [get_ports  gpio_bd[7]]   ; ## (lb: none)         U1,V16,IO_L18_34_JX4_P,JX4,68,IO_L18_34_JX4_P,P7,30 (Q2,Gate,NTD3055L)
 
 ## ps7- fixed io- to- fpga regular io (ps7 gpio)
 
