@@ -49,7 +49,8 @@ module up_dac_common #(
   parameter         COMMON_ID = 6'h10,
   parameter         DRP_DISABLE = 0,
   parameter         USERPORTS_DISABLE = 0,
-  parameter         GPIO_DISABLE = 0) (
+  parameter         GPIO_DISABLE = 0
+) (
 
   // mmcm reset
 
@@ -65,6 +66,8 @@ module up_dac_common #(
   output              dac_symb_8_16b,
   output              dac_sync,
   output              dac_ext_sync_arm,
+  output              dac_ext_sync_disarm,
+  output              dac_ext_sync_manual_req,
   output              dac_frame,
   output              dac_clksel,
   output              dac_par_type,
@@ -110,7 +113,8 @@ module up_dac_common #(
   input               up_rreq,
   input       [13:0]  up_raddr,
   output      [31:0]  up_rdata,
-  output              up_rack);
+  output              up_rack
+);
 
   // parameters
 
@@ -128,6 +132,8 @@ module up_dac_common #(
   reg             up_resetn = 'd0;
   reg             up_dac_sync = 'd0;
   reg             up_dac_ext_sync_arm = 'd0;
+  reg             up_dac_ext_sync_disarm = 'd0;
+  reg             up_dac_ext_sync_manual_req = 'd0;
   reg      [4:0]  up_dac_num_lanes = 'd0;
   reg             up_dac_sdr_ddr_n = 'd0;
   reg             up_dac_symb_op = 'd0;
@@ -193,6 +199,8 @@ module up_dac_common #(
       up_resetn <= 'd0;
       up_dac_sync <= 'd0;
       up_dac_ext_sync_arm <= 'd0;
+      up_dac_ext_sync_disarm <= 'd0;
+      up_dac_ext_sync_manual_req <= 'd0;
       up_dac_num_lanes <= 'd0;
       up_dac_sdr_ddr_n <= 'd0;
       up_dac_symb_op <= 'd0;
@@ -234,6 +242,20 @@ module up_dac_common #(
         end
       end else if ((up_wreq_s == 1'b1) && (up_waddr[6:0] == 7'h11)) begin
         up_dac_ext_sync_arm <= up_wdata[1];
+      end
+      if (up_dac_ext_sync_disarm == 1'b1) begin
+        if (up_xfer_done_s == 1'b1) begin
+          up_dac_ext_sync_disarm <= 1'b0;
+        end
+      end else if ((up_wreq_s == 1'b1) && (up_waddr[6:0] == 7'h11)) begin
+        up_dac_ext_sync_disarm <= up_wdata[2];
+      end
+      if (up_dac_ext_sync_manual_req == 1'b1) begin
+        if (up_xfer_done_s == 1'b1) begin
+          up_dac_ext_sync_manual_req <= 1'b0;
+        end
+      end else if ((up_wreq_s == 1'b1) && (up_waddr[6:0] == 7'h11)) begin
+        up_dac_ext_sync_manual_req <= up_wdata[8];
       end
       if ((up_wreq_s == 1'b1) && (up_waddr[6:0] == 7'h12)) begin
         up_dac_sdr_ddr_n <= up_wdata[16];
@@ -413,7 +435,10 @@ module up_dac_common #(
           7'h03: up_rdata_int <= CONFIG;
           7'h07: up_rdata_int <= {FPGA_TECHNOLOGY,FPGA_FAMILY,SPEED_GRADE,DEV_PACKAGE}; // [8,8,8,8]
           7'h10: up_rdata_int <= {29'd0, up_dac_clk_enb, up_mmcm_resetn, up_resetn};
-          7'h11: up_rdata_int <= {30'd0, up_dac_ext_sync_arm, up_dac_sync};
+          7'h11: up_rdata_int <= {20'd0,
+                                  3'b0, up_dac_ext_sync_manual_req,
+                                  4'b0,
+                                  1'b0, up_dac_ext_sync_disarm, up_dac_ext_sync_arm, up_dac_sync};
           7'h12: up_rdata_int <= {15'd0, up_dac_sdr_ddr_n,
                                   up_dac_symb_op, up_dac_symb_8_16b,
                                   1'd0, up_dac_num_lanes,
@@ -447,12 +472,23 @@ module up_dac_common #(
 
   // resets
 
-  ad_rst i_mmcm_rst_reg (.rst_async(up_mmcm_preset), .clk(up_clk),  .rstn(), .rst(mmcm_rst));
-  ad_rst i_core_rst_reg (.rst_async(up_core_preset), .clk(dac_clk), .rstn(), .rst(dac_rst_s));
+  ad_rst i_mmcm_rst_reg (
+    .rst_async(up_mmcm_preset),
+    .clk(up_clk),
+    .rstn(),
+    .rst(mmcm_rst));
+
+  ad_rst i_core_rst_reg (
+    .rst_async(up_core_preset),
+    .clk(dac_clk),
+    .rstn(),
+    .rst(dac_rst_s));
 
   // dac control & status
 
-  up_xfer_cntrl #(.DATA_WIDTH(33)) i_xfer_cntrl (
+  up_xfer_cntrl #(
+    .DATA_WIDTH(35)
+  ) i_xfer_cntrl (
     .up_rstn (up_rstn),
     .up_clk (up_clk),
     .up_data_cntrl ({ up_dac_sdr_ddr_n,
@@ -460,6 +496,8 @@ module up_dac_common #(
                       up_dac_symb_8_16b,
                       up_dac_num_lanes,
                       up_dac_ext_sync_arm,
+                      up_dac_ext_sync_disarm,
+                      up_dac_ext_sync_manual_req,
                       up_dac_sync,
                       up_dac_clksel,
                       up_dac_frame,
@@ -477,6 +515,8 @@ module up_dac_common #(
                       dac_symb_8_16b,
                       dac_num_lanes,
                       dac_ext_sync_arm,
+                      dac_ext_sync_disarm,
+                      dac_ext_sync_manual_req,
                       dac_sync_s,
                       dac_clksel,
                       dac_frame_s,
@@ -492,7 +532,9 @@ module up_dac_common #(
   // This is important at start-up when stable set of controls is required.
   assign dac_rst = ~dac_rst_n;
 
-  up_xfer_status #(.DATA_WIDTH(3)) i_xfer_status (
+  up_xfer_status #(
+    .DATA_WIDTH(3)
+  ) i_xfer_status (
     .up_rstn (up_rstn),
     .up_clk (up_clk),
     .up_data_status ({up_sync_in_status,
@@ -533,6 +575,3 @@ module up_dac_common #(
     .d_clk (dac_clk));
 
 endmodule
-
-// ***************************************************************************
-// ***************************************************************************

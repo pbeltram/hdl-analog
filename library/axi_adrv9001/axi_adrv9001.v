@@ -1,6 +1,6 @@
 // ***************************************************************************
 // ***************************************************************************
-// Copyright 2014 - 2020 (c) Analog Devices, Inc. All rights reserved.
+// Copyright 2014 - 2022 (c) Analog Devices, Inc. All rights reserved.
 //
 // In this HDL repository, there are many different and unique modules, consisting
 // of various HDL (Verilog or VHDL) components. The individual modules are
@@ -46,6 +46,8 @@ module axi_adrv9001 #(
   parameter DISABLE_TX2_SSI = 0,
   parameter RX_USE_BUFG = 0,
   parameter TX_USE_BUFG = 0,
+  parameter IODELAY_CTRL = 1,
+  parameter IODELAY_ENABLE = 1,
   parameter IO_DELAY_GROUP = "dev_if_delay_group",
   parameter FPGA_TECHNOLOGY = 0,
   parameter FPGA_FAMILY = 0,
@@ -280,11 +282,13 @@ module axi_adrv9001 #(
     .DRP_WIDTH (DRP_WIDTH),
     .RX_USE_BUFG (RX_USE_BUFG),
     .TX_USE_BUFG (TX_USE_BUFG),
+    .IODELAY_CTRL (IODELAY_CTRL),
+    .IODELAY_ENABLE (IODELAY_ENABLE),
     .IO_DELAY_GROUP (IO_DELAY_GROUP),
     .DISABLE_RX2_SSI (DISABLE_RX2_SSI),
     .DISABLE_TX2_SSI (DISABLE_TX2_SSI),
     .USE_RX_CLK_FOR_TX (USE_RX_CLK_FOR_TX)
-  ) i_if(
+  ) i_if (
 
     //
     // Physical interface
@@ -402,11 +406,10 @@ module axi_adrv9001 #(
     .tx2_single_lane (tx2_single_lane),
     .tx2_sdr_ddr_n (tx2_sdr_ddr_n),
     .tx2_symb_op (tx2_symb_op),
-    .tx2_symb_8_16b (tx2_symb_8_16b)
-  );
+    .tx2_symb_8_16b (tx2_symb_8_16b));
 
   // common processor control
-  axi_ad9001_core #(
+  axi_adrv9001_core #(
     .ID (ID),
     .NUM_LANES (NUM_LANES),
     .CMOS_LVDS_N (CMOS_LVDS_N),
@@ -549,8 +552,7 @@ module axi_adrv9001 #(
     .up_rreq (up_rreq_s),
     .up_raddr (up_raddr_s),
     .up_rdata (up_rdata_s),
-    .up_rack (up_rack_s)
-  );
+    .up_rack (up_rack_s));
 
   assign adc_1_valid_i0 = adc_1_valid;
   assign adc_1_valid_q0 = adc_1_valid;
@@ -574,7 +576,7 @@ module axi_adrv9001 #(
   // up bus interface
   up_axi #(
     .AXI_ADDRESS_WIDTH(15)
-    ) i_up_axi (
+  ) i_up_axi (
     .up_rstn (up_rstn),
     .up_clk (up_clk),
     .up_axi_awvalid (s_axi_awvalid),
@@ -601,8 +603,7 @@ module axi_adrv9001 #(
     .up_wack (up_wack_s),
     .up_raddr (up_raddr_s[12:0]),
     .up_rreq (up_rreq_s),
-    .up_rack (up_rack_s)
-  );
+    .up_rack (up_rack_s));
 
   // Alias Rx/Tx peripherals @ 0x8000
   assign up_raddr_s[13] = 1'b0;

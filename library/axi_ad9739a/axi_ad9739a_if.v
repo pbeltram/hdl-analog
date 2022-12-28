@@ -1,6 +1,6 @@
 // ***************************************************************************
 // ***************************************************************************
-// Copyright 2014 - 2017 (c) Analog Devices, Inc. All rights reserved.
+// Copyright 2014 - 2022 (c) Analog Devices, Inc. All rights reserved.
 //
 // In this HDL repository, there are many different and unique modules, consisting
 // of various HDL (Verilog or VHDL) components. The individual modules are
@@ -39,7 +39,8 @@
 
 module axi_ad9739a_if #(
 
-  parameter   FPGA_TECHNOLOGY = 0) (
+  parameter   FPGA_TECHNOLOGY = 0
+) (
 
   // dac interface
 
@@ -76,8 +77,8 @@ module axi_ad9739a_if #(
   input       [15:0]      dac_data_12,
   input       [15:0]      dac_data_13,
   input       [15:0]      dac_data_14,
-  input       [15:0]      dac_data_15);
-
+  input       [15:0]      dac_data_15
+);
 
   // internal registers
 
@@ -102,12 +103,11 @@ module axi_ad9739a_if #(
     .DDR_OR_SDR_N(1),
     .DATA_WIDTH(14),
     .SERDES_FACTOR(8),
-    .FPGA_TECHNOLOGY (FPGA_TECHNOLOGY))
-  i_serdes_out_data_a (
+    .FPGA_TECHNOLOGY (FPGA_TECHNOLOGY)
+  ) i_serdes_out_data_a (
     .rst (dac_rst),
     .clk (dac_clk),
     .div_clk (dac_div_clk),
-    .loaden (1'b0),
     .data_oe (1'b1),
     .data_s0 (dac_data_00[15:2]),
     .data_s1 (dac_data_02[15:2]),
@@ -127,12 +127,11 @@ module axi_ad9739a_if #(
     .DDR_OR_SDR_N(1),
     .DATA_WIDTH(14),
     .SERDES_FACTOR(8),
-    .FPGA_TECHNOLOGY (FPGA_TECHNOLOGY))
-  i_serdes_out_data_b (
+    .FPGA_TECHNOLOGY (FPGA_TECHNOLOGY)
+  ) i_serdes_out_data_b (
     .rst (dac_rst),
     .clk (dac_clk),
     .div_clk (dac_div_clk),
-    .loaden (1'b0),
     .data_oe (1'b1),
     .data_s0 (dac_data_01[15:2]),
     .data_s1 (dac_data_03[15:2]),
@@ -152,12 +151,11 @@ module axi_ad9739a_if #(
     .DDR_OR_SDR_N(1),
     .DATA_WIDTH(1),
     .SERDES_FACTOR(8),
-    .FPGA_TECHNOLOGY (FPGA_TECHNOLOGY))
-  i_serdes_out_clk (
+    .FPGA_TECHNOLOGY (FPGA_TECHNOLOGY)
+  ) i_serdes_out_clk (
     .rst (dac_rst),
     .clk (dac_clk),
     .div_clk (dac_div_clk),
-    .loaden (1'b0),
     .data_oe (1'b1),
     .data_s0 (1'b1),
     .data_s1 (1'b0),
@@ -182,7 +180,9 @@ module axi_ad9739a_if #(
     .I (dac_clk_in_s),
     .O (dac_clk));
 
-  BUFR #(.BUFR_DIVIDE("4")) i_dac_div_clk_rbuf (
+  BUFR #(
+    .BUFR_DIVIDE("4")
+  ) i_dac_div_clk_rbuf (
     .CLR (1'b0),
     .CE (1'b1),
     .I (dac_clk_in_s),
@@ -193,6 +193,3 @@ module axi_ad9739a_if #(
     .O (dac_div_clk));
 
 endmodule
-
-// ***************************************************************************
-// ***************************************************************************

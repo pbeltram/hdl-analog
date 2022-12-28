@@ -21,7 +21,7 @@
 # ***************************************************************************
 # ***************************************************************************
 
-source ../../scripts/adi_env.tcl
+source ../../../scripts/adi_env.tcl
 source $ad_hdl_dir/library/scripts/adi_ip_xilinx.tcl
 
 adi_ip_create ad_ip_jesd204_tpl_dac
@@ -44,6 +44,7 @@ adi_ip_files ad_ip_jesd204_tpl_dac [list \
   "$ad_hdl_dir/library/common/up_clock_mon.v" \
   "$ad_hdl_dir/library/common/up_dac_common.v" \
   "$ad_hdl_dir/library/common/up_dac_channel.v" \
+  "$ad_hdl_dir/library/common/util_ext_sync.v" \
   "$ad_hdl_dir/library/xilinx/common/up_xfer_cntrl_constr.xdc" \
   "$ad_hdl_dir/library/xilinx/common/ad_rst_constr.xdc" \
   "$ad_hdl_dir/library/xilinx/common/up_xfer_status_constr.xdc" \
@@ -80,6 +81,10 @@ adi_add_bus "link" "master" \
   ]
 adi_add_bus_clock "link_clk" "link"
 
+adi_set_ports_dependency "dac_sync_in"             "EXT_SYNC == 1"
+adi_set_ports_dependency "dac_sync_manual_req_out" "EXT_SYNC == 1"
+adi_set_ports_dependency "dac_sync_manual_req_in"  "EXT_SYNC == 1"
+
 set_property -dict [list \
   "value_validation_type" "pairs" \
   "value_validation_pairs" {"Polynominal" "0" "CORDIC" "1"} \
@@ -96,7 +101,7 @@ foreach p {DDS_CORDIC_DW DDS_CORDIC_PHASE_DW} {
 }
 
 foreach {p v} {
-  "NUM_LANES" "1 2 3 4 6 8 12 16" \
+  "NUM_LANES" "1 2 3 4 6 8 12 16 24 32" \
   "NUM_CHANNELS" "1 2 4 6 8 16 32 64" \
   "BITS_PER_SAMPLE" "8 12 16" \
   "DMA_BITS_PER_SAMPLE" "8 12 16" \

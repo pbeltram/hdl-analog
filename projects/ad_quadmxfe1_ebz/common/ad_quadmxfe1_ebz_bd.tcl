@@ -94,7 +94,7 @@ ad_ip_instance util_adxcvr util_mxfe_xcvr [list \
 
 ad_ip_instance axi_adxcvr axi_mxfe_rx_xcvr [list \
   ID 0 \
-  NUM_OF_LANES $RX_NUM_OF_LANES\
+  NUM_OF_LANES $MAX_RX_LANES\
   TX_OR_RX_N 0 \
   QPLL_ENABLE 0 \
   LPM_OR_DFE_N 1 \
@@ -103,7 +103,7 @@ ad_ip_instance axi_adxcvr axi_mxfe_rx_xcvr [list \
 
 ad_ip_instance axi_adxcvr axi_mxfe_tx_xcvr [list \
   ID 0 \
-  NUM_OF_LANES $TX_NUM_OF_LANES \
+  NUM_OF_LANES $MAX_TX_LANES \
   TX_OR_RX_N 1 \
   QPLL_ENABLE 1 \
   SYS_CLK_SEL 0x3 \
@@ -137,8 +137,8 @@ ad_connect  $sys_cpu_resetn tx_device_clk_rstgen/ext_reset_in
 
 # Common PHYs
 # Use two instances since they are located on different SLRS
-set rx_rate $ad_project_params(RX_RATE)
-set tx_rate $ad_project_params(TX_RATE)
+set rx_rate $ad_project_params(RX_LANE_RATE)
+set tx_rate $ad_project_params(TX_LANE_RATE)
 set ref_clk_rate $ad_project_params(REF_CLK_RATE)
 
 ad_ip_instance jesd204_phy jesd204_phy_121_122 [list \
@@ -197,6 +197,7 @@ adi_tpl_jesd204_rx_create rx_mxfe_tpl_core $RX_NUM_OF_LANES \
                                            $RX_DMA_SAMPLE_WIDTH
 
 ad_ip_parameter rx_mxfe_tpl_core/adc_tpl_core CONFIG.EN_FRAME_ALIGN 0
+ad_ip_parameter rx_mxfe_tpl_core/adc_tpl_core CONFIG.EXT_SYNC 1
 
 ad_ip_instance util_cpack2 util_mxfe_cpack [list \
   NUM_OF_CHANNELS $RX_NUM_OF_CONVERTERS \
@@ -335,7 +336,7 @@ for {set i 0}  {$i < $RX_NUM_OF_LINKS} {incr i} {
   }
 }
 
-ad_xcvrcon  util_mxfe_xcvr axi_mxfe_rx_xcvr axi_mxfe_rx_jesd $lane_map {} rx_device_clk
+ad_xcvrcon  util_mxfe_xcvr axi_mxfe_rx_xcvr axi_mxfe_rx_jesd $max_lane_map {} rx_device_clk $MAX_RX_LANES $lane_map
 
 # connections (dac)
 #  map the logical lane $n onto the physical lane  $lane_map[$n]
@@ -352,7 +353,7 @@ for {set i 0}  {$i < $TX_NUM_OF_LINKS} {incr i} {
   }
 }
 
-ad_xcvrcon  util_mxfe_xcvr axi_mxfe_tx_xcvr axi_mxfe_tx_jesd $lane_map {} tx_device_clk
+ad_xcvrcon  util_mxfe_xcvr axi_mxfe_tx_xcvr axi_mxfe_tx_jesd $max_lane_map {} tx_device_clk $MAX_TX_LANES $lane_map
 
 } else {
 

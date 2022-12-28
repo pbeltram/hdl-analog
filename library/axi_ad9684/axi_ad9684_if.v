@@ -1,6 +1,6 @@
 // ***************************************************************************
 // ***************************************************************************
-// Copyright 2014 - 2017 (c) Analog Devices, Inc. All rights reserved.
+// Copyright 2014 - 2022 (c) Analog Devices, Inc. All rights reserved.
 //
 // In this HDL repository, there are many different and unique modules, consisting
 // of various HDL (Verilog or VHDL) components. The individual modules are
@@ -38,8 +38,10 @@
 module axi_ad9684_if #(
 
   parameter FPGA_TECHNOLOGY = 0,
+  parameter IODELAY_ENABLE = 1,
   parameter IO_DELAY_GROUP = "dev_if_delay_group",
-  parameter OR_STATUS = 0) (
+  parameter OR_STATUS = 0
+) (
 
   // device interface
   input                   adc_clk_in_p,
@@ -78,8 +80,8 @@ module axi_ad9684_if #(
   input       [31:0]      up_drp_wdata,
   output      [31:0]      up_drp_rdata,
   output                  up_drp_ready,
-  output                  up_drp_locked);
-
+  output                  up_drp_locked
+);
 
   localparam DDR_OR_SDR_N = 1;
 
@@ -93,7 +95,6 @@ module axi_ad9684_if #(
   wire            adc_div_clk;
   wire  [ 1:0]    adc_data_or_a_s;
   wire  [ 1:0]    adc_data_or_b_s;
-  wire            loaden_s;
   wire  [ 7:0]    phase_s;
 
   genvar          l_inst;
@@ -107,17 +108,15 @@ module axi_ad9684_if #(
 
   ad_serdes_in #(
     .FPGA_TECHNOLOGY(FPGA_TECHNOLOGY),
+    .IODELAY_ENABLE (IODELAY_ENABLE),
     .IODELAY_CTRL(1),
     .IODELAY_GROUP(IO_DELAY_GROUP),
     .DDR_OR_SDR_N(DDR_OR_SDR_N),
-    .DATA_WIDTH(14))
-  i_adc_data (
+    .DATA_WIDTH(14)
+  ) i_adc_data (
     .rst(adc_rst),
     .clk(adc_clk_in),
     .div_clk(adc_div_clk),
-    .loaden(loaden_s),
-    .phase(phase_s),
-    .locked(1'b0),
     .data_s0(adc_data_b[27:14]),
     .data_s1(adc_data_a[27:14]),
     .data_s2(adc_data_b[13: 0]),
@@ -140,17 +139,15 @@ module axi_ad9684_if #(
 
     ad_serdes_in #(
       .FPGA_TECHNOLOGY(FPGA_TECHNOLOGY),
+      .IODELAY_ENABLE (IODELAY_ENABLE),
       .IODELAY_CTRL(0),
       .IODELAY_GROUP(IO_DELAY_GROUP),
       .DDR_OR_SDR_N(DDR_OR_SDR_N),
-      .DATA_WIDTH(1))
-    i_adc_or (
+      .DATA_WIDTH(1)
+    ) i_adc_or (
       .rst(adc_rst),
       .clk(adc_clk_in),
       .div_clk(adc_div_clk),
-      .loaden(loaden_s),
-      .phase(phase_s),
-      .locked(1'b0),
       .data_s0(adc_data_or_b_s[1]),
       .data_s1(adc_data_or_a_s[1]),
       .data_s2(adc_data_or_b_s[0]),
@@ -188,16 +185,14 @@ module axi_ad9684_if #(
     .MMCM_VCO_DIV (6),
     .MMCM_VCO_MUL (12),
     .MMCM_CLK0_DIV (2),
-    .MMCM_CLK1_DIV (4))
-  i_serdes_clk (
+    .MMCM_CLK1_DIV (4)
+  ) i_serdes_clk (
     .rst (rst),
     .clk_in_p (adc_clk_in_p),
     .clk_in_n (adc_clk_in_n),
     .clk (adc_clk_in),
     .div_clk (adc_div_clk),
     .out_clk (),
-    .loaden (loaden_s),
-    .phase (phase_s),
     .up_clk (up_clk),
     .up_rstn (up_rstn),
     .up_drp_sel (up_drp_sel),

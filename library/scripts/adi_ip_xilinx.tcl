@@ -1,19 +1,9 @@
-
 source $ad_hdl_dir/library/scripts/adi_xilinx_device_info_enc.tcl
 
-# check tool version
-
-set required_vivado_version "2021.1"
-if {[info exists ::env(REQUIRED_VIVADO_VERSION)]} {
-  set required_vivado_version $::env(REQUIRED_VIVADO_VERSION)
-} elseif {[info exists REQUIRED_VIVADO_VERSION]} {
-  set required_vivado_version $REQUIRED_VIVADO_VERSION
-}
-
-if {[info exists ::env(ADI_IGNORE_VERSION_CHECK)]} {
-  set IGNORE_VERSION_CHECK 1
-} elseif {![info exists IGNORE_VERSION_CHECK]} {
-  set IGNORE_VERSION_CHECK 0
+if {[info exists ::env(ADI_VIVADO_IP_LIBRARY)]} {
+  set VIVADO_IP_LIBRARY $::env(ADI_VIVADO_IP_LIBRARY)
+} else {
+  set VIVADO_IP_LIBRARY user
 }
 
 ## Add a ttcl file to the project. XDC does not support if statements
@@ -292,8 +282,12 @@ proc adi_ip_create {ip_name} {
   }
 
   set lib_dirs $ad_hdl_dir/library
-  if {$ad_hdl_dir ne $ad_ghdl_dir} {
-    lappend lib_dirs $ad_ghdl_dir/library
+  if {[info exists ::env(ADI_GHDL_DIR)]} {
+    if {$ad_hdl_dir ne $ad_ghdl_dir} {
+      lappend lib_dirs $ad_ghdl_dir/library
+    }
+  } else {
+    # puts -nonew-line "INFO: ADI_GHDL_DIR not defined.\n"
   }
 
   set_property ip_repo_paths $lib_dirs [current_fileset]
@@ -324,8 +318,9 @@ proc adi_ip_files {ip_name ip_files} {
 proc adi_ip_properties_lite {ip_name} {
 
   global ad_hdl_dir
+  global VIVADO_IP_LIBRARY
 
-  ipx::package_project -root_dir . -vendor analog.com -library user -taxonomy /Analog_Devices
+  ipx::package_project -root_dir . -vendor analog.com -library $VIVADO_IP_LIBRARY -taxonomy /Analog_Devices
 
   set_property name $ip_name [ipx::current_core]
 
@@ -637,4 +632,3 @@ proc adi_if_infer_bus {if_name mode name maps} {
     set_property physical_name $p_map [ipx::get_port_maps $p_name -of_objects $m_bus_if]
   }
 }
-

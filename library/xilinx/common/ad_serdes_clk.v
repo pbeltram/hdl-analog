@@ -1,6 +1,6 @@
 // ***************************************************************************
 // ***************************************************************************
-// Copyright 2014 - 2017 (c) Analog Devices, Inc. All rights reserved.
+// Copyright 2014 - 2022 (c) Analog Devices, Inc. All rights reserved.
 //
 // In this HDL repository, there are many different and unique modules, consisting
 // of various HDL (Verilog or VHDL) components. The individual modules are
@@ -40,6 +40,8 @@ module ad_serdes_clk #(
 
   parameter       FPGA_TECHNOLOGY = 0,
   parameter       DDR_OR_SDR_N = 1,
+  // single ended - 0
+  // differential - 1
   parameter       CLKIN_DS_OR_SE_N = 1,
   parameter       SERDES_FACTOR = 8,
   parameter       MMCM_OR_BUFR_N = 1,
@@ -47,7 +49,8 @@ module ad_serdes_clk #(
   parameter       MMCM_VCO_DIV  = 6,
   parameter       MMCM_VCO_MUL = 12.000,
   parameter       MMCM_CLK0_DIV = 2.000,
-  parameter       MMCM_CLK1_DIV = 6) (
+  parameter       MMCM_CLK1_DIV = 6
+) (
 
   // clock and divided clock
 
@@ -57,8 +60,6 @@ module ad_serdes_clk #(
   output          clk,
   output          div_clk,
   output          out_clk,
-  output          loaden,
-  output  [ 7:0]  phase,
 
   // drp interface
 
@@ -70,7 +71,8 @@ module ad_serdes_clk #(
   input   [31:0]  up_drp_wdata,
   output  [31:0]  up_drp_rdata,
   output          up_drp_ready,
-  output          up_drp_locked);
+  output          up_drp_locked
+);
 
   localparam BUFR_DIVIDE = (DDR_OR_SDR_N == 1'b1) ? SERDES_FACTOR / 2 : SERDES_FACTOR;
 
@@ -80,8 +82,6 @@ module ad_serdes_clk #(
 
   // defaults
 
-  assign loaden = 'd0;
-  assign phase = 'd0;
   assign up_drp_rdata[31:16] = 'd0;
 
   // instantiations
@@ -112,8 +112,8 @@ module ad_serdes_clk #(
       .MMCM_CLK1_DIV (MMCM_CLK1_DIV),
       .MMCM_CLK1_PHASE (0.0),
       .MMCM_CLK2_DIV (MMCM_CLK0_DIV),
-      .MMCM_CLK2_PHASE (90.0))
-    i_mmcm_drp (
+      .MMCM_CLK2_PHASE (90.0)
+    ) i_mmcm_drp (
       .clk (clk_in_s),
       .clk2 (1'b0),
       .clk_sel (1'b1),
@@ -130,7 +130,7 @@ module ad_serdes_clk #(
       .up_drp_rdata (up_drp_rdata[15:0]),
       .up_drp_ready (up_drp_ready),
       .up_drp_locked (up_drp_locked));
-    end
+  end
   endgenerate
 
   generate
@@ -139,7 +139,9 @@ module ad_serdes_clk #(
       .I (clk_in_s),
       .O (clk));
 
-    BUFR #(.BUFR_DIVIDE(BUFR_DIVIDE)) i_div_clk_buf (
+    BUFR #(
+      .BUFR_DIVIDE(BUFR_DIVIDE)
+    ) i_div_clk_buf (
       .CLR (1'b0),
       .CE (1'b1),
       .I (clk_in_s),
@@ -154,7 +156,3 @@ module ad_serdes_clk #(
   endgenerate
 
 endmodule
-
-// ***************************************************************************
-// ***************************************************************************
-

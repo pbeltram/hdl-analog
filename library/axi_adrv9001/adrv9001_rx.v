@@ -1,6 +1,6 @@
 // ***************************************************************************
 // ***************************************************************************
-// Copyright 2014 - 2020 (c) Analog Devices, Inc. All rights reserved.
+// Copyright 2014 - 2022 (c) Analog Devices, Inc. All rights reserved.
 //
 // In this HDL repository, there are many different and unique modules, consisting
 // of various HDL (Verilog or VHDL) components. The individual modules are
@@ -40,10 +40,12 @@ module adrv9001_rx #(
   parameter FPGA_TECHNOLOGY = 0,
   parameter NUM_LANES = 3,
   parameter DRP_WIDTH = 5,
+  parameter IODELAY_ENABLE = 1,
   parameter IODELAY_CTRL = 0,
   parameter USE_BUFG = 0,
   parameter IO_DELAY_GROUP = "dev_if_delay_group"
 ) (
+
   // device interface
   input                   rx_dclk_in_n_NC,
   input                   rx_dclk_in_p_dclk_in,
@@ -110,18 +112,16 @@ module adrv9001_rx #(
     .CMOS_LVDS_N (CMOS_LVDS_N),
     .FPGA_TECHNOLOGY (FPGA_TECHNOLOGY),
     .IODELAY_CTRL (IODELAY_CTRL),
+    .IODELAY_ENABLE (IODELAY_ENABLE),
     .IODELAY_GROUP (IO_DELAY_GROUP),
     .DDR_OR_SDR_N (DDR_OR_SDR_N),
     .DATA_WIDTH (NUM_LANES),
     .DRP_WIDTH (DRP_WIDTH),
-    .SERDES_FACTOR (8))
-  i_serdes (
+    .SERDES_FACTOR (8)
+  ) i_serdes (
     .rst (adc_rst|ssi_rst),
     .clk (adc_clk_in_fast),
     .div_clk (adc_clk_div),
-    .loaden (1'b0),
-    .phase (8'b0),
-    .locked (1'b0),
     .data_s0 (data_s0),
     .data_s1 (data_s1),
     .data_s2 (data_s2),
@@ -196,7 +196,9 @@ module adrv9001_rx #(
       .I (clk_in_s),
       .O (adc_clk_in_fast));
 
-    BUFR #(.BUFR_DIVIDE("4")) i_div_clk_buf (
+    BUFR #(
+      .BUFR_DIVIDE("4")
+    ) i_div_clk_buf (
       .CLR (mssi_sync),
       .CE (1'b1),
       .I (clk_in_s),
@@ -205,24 +207,19 @@ module adrv9001_rx #(
     if (USE_BUFG == 1) begin
       BUFG I_bufg (
         .I (adc_clk_div_s),
-        .O (adc_clk_div)
-      );
+        .O (adc_clk_div));
     end else begin
       assign adc_clk_div = adc_clk_div_s;
     end
 
-    xpm_cdc_async_rst
-    # (
-       .DEST_SYNC_FF    (10), // DECIMAL; range: 2-10
-       .INIT_SYNC_FF    ( 0), // DECIMAL; 0=disable simulation init values, 1=enable simulation init values
-       .RST_ACTIVE_HIGH ( 1)  // DECIMAL; 0=active low reset, 1=active high reset
-      )
-    rst_syncro
-    (
-     .src_arst (mssi_sync  ),
-     .dest_clk (adc_clk_div),
-     .dest_arst(ssi_rst    )
-    );
+    xpm_cdc_async_rst #(
+      .DEST_SYNC_FF    (10), // DECIMAL; range: 2-10
+      .INIT_SYNC_FF    ( 0), // DECIMAL; 0=disable simulation init values, 1=enable simulation init values
+      .RST_ACTIVE_HIGH ( 1)  // DECIMAL; 0=active low reset, 1=active high reset
+    ) rst_syncro (
+      .src_arst (mssi_sync),
+      .dest_clk (adc_clk_div),
+      .dest_arst(ssi_rst));
 
   end else begin
     wire adc_clk_in;
@@ -248,26 +245,24 @@ module adrv9001_rx #(
     assign adc_clk_in = clk_in_s;
 
     BUFGCE #(
-       .CE_TYPE ("SYNC"),
-       .IS_CE_INVERTED (1'b0),
-       .IS_I_INVERTED (1'b0)
+      .CE_TYPE ("SYNC"),
+      .IS_CE_INVERTED (1'b0),
+      .IS_I_INVERTED (1'b0)
     ) i_clk_buf_fast (
-       .O (adc_clk_in_fast),
-       .CE (1'b1),
-       .I (adc_clk_in)
-    );
+      .O (adc_clk_in_fast),
+      .CE (1'b1),
+      .I (adc_clk_in));
 
     BUFGCE_DIV #(
-       .BUFGCE_DIVIDE (4),
-       .IS_CE_INVERTED (1'b0),
-       .IS_CLR_INVERTED (1'b0),
-       .IS_I_INVERTED (1'b0)
+      .BUFGCE_DIVIDE (4),
+      .IS_CE_INVERTED (1'b0),
+      .IS_CLR_INVERTED (1'b0),
+      .IS_I_INVERTED (1'b0)
     ) i_div_clk_buf (
-       .O (adc_clk_div),
-       .CE (1'b1),
-       .CLR (ssi_rst),
-       .I (adc_clk_in)
-    );
+      .O (adc_clk_div),
+      .CE (1'b1),
+      .CLR (ssi_rst),
+      .I (adc_clk_in));
 
     assign ssi_rst = ssi_rst_pos;
 

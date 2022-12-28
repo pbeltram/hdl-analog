@@ -4,6 +4,8 @@ package require math
 ## Global variables for interconnect interface indexing
 #
 set sys_cpu_interconnect_index 0
+set sys_hpc0_interconnect_index -1
+set sys_hpc1_interconnect_index -1
 set sys_hp0_interconnect_index -1
 set sys_hp1_interconnect_index -1
 set sys_hp2_interconnect_index -1
@@ -295,16 +297,19 @@ proc ad_disconnect {p_name_1 p_name_2} {
 #  \param[device_clk] - define a custom device clock, should be a net name
 #  connected to the clock source. If not used, the link_clk is used as
 #  device clock
+#  \param[num_of_max_lanes] - maximum number of used lanes at physical layer per link,
+#  this parameter is used only when the project is parameterized in order to connect the unused lanes
+#  to the util_adxcvr block. If not used, the number of connected lanes will be defined
+#  by the axi_adxcvr.
 #
 
-proc ad_xcvrcon {u_xcvr a_xcvr a_jesd {lane_map {}} {link_clk {}} {device_clk {}}} {
+proc ad_xcvrcon {u_xcvr a_xcvr a_jesd {lane_map {}} {link_clk {}} {device_clk {}} {num_of_max_lanes -1} {partial_lane_map {}}} {
 
   global xcvr_index
   global xcvr_tx_index
   global xcvr_rx_index
   global xcvr_instance
 
-  set no_of_lanes [get_property CONFIG.NUM_OF_LANES [get_bd_cells $a_xcvr]]
   set qpll_enable [get_property CONFIG.QPLL_ENABLE [get_bd_cells $a_xcvr]]
   set tx_or_rx_n [get_property CONFIG.TX_OR_RX_N [get_bd_cells $a_xcvr]]
 
@@ -363,6 +368,12 @@ proc ad_xcvrcon {u_xcvr a_xcvr a_jesd {lane_map {}} {link_clk {}} {device_clk {}
     set num_of_links 1
   }
 
+  set no_of_lanes [get_property CONFIG.NUM_LANES [get_bd_cells $a_jesd/$txrx]]
+  set max_no_of_lanes $no_of_lanes
+
+  if {$num_of_max_lanes != -1} {
+    set max_no_of_lanes $num_of_max_lanes
+  }
   create_bd_port -dir I $m_sysref
   create_bd_port -from [expr $num_of_links - 1] -to 0 -dir ${ctrl_dir} $m_sync
 
@@ -376,7 +387,12 @@ proc ad_xcvrcon {u_xcvr a_xcvr a_jesd {lane_map {}} {link_clk {}} {device_clk {}
       set link_clk_2x ${u_xcvr}/${txrx}_out_clk_${index}
       set use_2x_clk 1
     } else {
-      set link_clk ${u_xcvr}/${txrx}_out_clk_${index}
+      if {$partial_lane_map != {}} {
+        set cur_index [lindex $partial_lane_map $index]
+        set link_clk ${u_xcvr}/${txrx}_out_clk_${cur_index}
+      } else {
+        set link_clk ${u_xcvr}/${txrx}_out_clk_${index}
+      }
     }
     set rst_gen [regsub -all "/" ${a_jesd}_rstgen "_"]
     set create_rst_gen 1
@@ -400,50 +416,127 @@ proc ad_xcvrcon {u_xcvr a_xcvr a_jesd {lane_map {}} {link_clk {}} {device_clk {}
     ad_connect sys_cpu_resetn ${rst_gen}/ext_reset_in
   }
 
-  for {set n 0} {$n < $no_of_lanes} {incr n} {
+  if {$partial_lane_map != {}} {
+    for {set n 0} {$n < $no_of_lanes} {incr n} {
 
-    set m [expr ($n + $index)]
-
-
-    if {$lane_map != {}} {
-      set phys_lane [lindex $lane_map $n]
-    } else {
-      set phys_lane $m
-    }
-
-    if {$tx_or_rx_n == 0} {
-      ad_connect  ${a_xcvr}/up_es_${n} ${u_xcvr}/up_es_${phys_lane}
-      if {$jesd204_type == 0} {
-        if {$link_mode == 1} {
-          ad_connect  ${a_jesd}/phy_en_char_align ${u_xcvr}/${txrx}_calign_${phys_lane}
+      set phys_lane [lindex $partial_lane_map $n]
+    
+      if {$phys_lane != {}} {
+        if {$jesd204_type == 0} {
+          ad_connect  ${u_xcvr}/${txrx}_${phys_lane} ${a_jesd}/${txrx}_phy${n}
+        } else {
+          ad_connect  ${u_xcvr}/${txrx}_${phys_lane} ${a_jesd}/gt${n}_${txrx}
         }
-      } else {
-        ad_connect  ${a_jesd}/rxencommaalign_out ${u_xcvr}/${txrx}_calign_${phys_lane}
+      }
+
+      if {$tx_or_rx_n == 0} {
+        if {$jesd204_type == 0} {
+          if {$link_mode == 1} {
+            ad_connect  ${a_jesd}/phy_en_char_align ${u_xcvr}/${txrx}_calign_${phys_lane}
+          }
+        } else {
+          ad_connect  ${a_jesd}/rxencommaalign_out ${u_xcvr}/${txrx}_calign_${phys_lane}
+        }
       }
     }
 
-    if {(($n%4) == 0) && ($qpll_enable == 1)} {
-      ad_connect  ${a_xcvr}/up_cm_${n} ${u_xcvr}/up_cm_${n}
-    }
-    ad_connect  ${a_xcvr}/up_ch_${n} ${u_xcvr}/up_${txrx}_${phys_lane}
-    ad_connect  ${link_clk} ${u_xcvr}/${txrx}_clk_${phys_lane}
-    if {$use_2x_clk == 1} {
-      ad_connect  ${link_clk_2x} ${u_xcvr}/${txrx}_clk_2x_${phys_lane}
-    }
-    if {$phys_lane != {}} {
-      if {$jesd204_type == 0} {
-        ad_connect  ${u_xcvr}/${txrx}_${phys_lane} ${a_jesd}/${txrx}_phy${n}
+    for {set n 0} {$n < $max_no_of_lanes} {incr n} {
+
+      set m [expr ($n + $index)]
+
+      if {$lane_map != {}} {
+        set phys_lane [lindex $lane_map $n]
       } else {
-        ad_connect  ${u_xcvr}/${txrx}_${phys_lane} ${a_jesd}/gt${n}_${txrx}
+        set phys_lane $m
       }
+
+      if {$tx_or_rx_n == 0} {
+        ad_connect  ${a_xcvr}/up_es_${n} ${u_xcvr}/up_es_${phys_lane}
+      }
+      
+      if {(($n%4) == 0) && ($qpll_enable == 1)} {
+        ad_connect  ${a_xcvr}/up_cm_${n} ${u_xcvr}/up_cm_${n}
+      }
+      ad_connect  ${a_xcvr}/up_ch_${n} ${u_xcvr}/up_${txrx}_${phys_lane}
+      ad_connect  ${link_clk} ${u_xcvr}/${txrx}_clk_${phys_lane}
+      if {$use_2x_clk == 1} {
+        ad_connect  ${link_clk_2x} ${u_xcvr}/${txrx}_clk_2x_${phys_lane}
+      }
+
+      create_bd_port -dir ${data_dir} ${m_data}_${m}_p
+      create_bd_port -dir ${data_dir} ${m_data}_${m}_n
+      ad_connect  ${u_xcvr}/${txrx}_${m}_p ${m_data}_${m}_p
+      ad_connect  ${u_xcvr}/${txrx}_${m}_n ${m_data}_${m}_n
+    }
+  } else {
+    for {set n 0} {$n < $no_of_lanes} {incr n} {
+
+      set m [expr ($n + $index)]
+      if {$lane_map != {}} {
+        set phys_lane [lindex $lane_map $n]
+      } else {
+        set phys_lane $m
+      }
+
+      if {$tx_or_rx_n == 0} {
+        ad_connect  ${a_xcvr}/up_es_${n} ${u_xcvr}/up_es_${phys_lane}
+        if {$jesd204_type == 0} {
+          if {$link_mode == 1} {
+            ad_connect  ${a_jesd}/phy_en_char_align ${u_xcvr}/${txrx}_calign_${phys_lane}
+          }
+        } else {
+          ad_connect  ${a_jesd}/rxencommaalign_out ${u_xcvr}/${txrx}_calign_${phys_lane}
+        }
+      }
+
+      if {(($n%4) == 0) && ($qpll_enable == 1)} {
+        ad_connect  ${a_xcvr}/up_cm_${n} ${u_xcvr}/up_cm_${n}
+      }
+      ad_connect  ${a_xcvr}/up_ch_${n} ${u_xcvr}/up_${txrx}_${phys_lane}
+      ad_connect  ${link_clk} ${u_xcvr}/${txrx}_clk_${phys_lane}
+      if {$use_2x_clk == 1} {
+        ad_connect  ${link_clk_2x} ${u_xcvr}/${txrx}_clk_2x_${phys_lane}
+      }
+      if {$phys_lane != {}} {
+        if {$jesd204_type == 0} {
+          ad_connect  ${u_xcvr}/${txrx}_${phys_lane} ${a_jesd}/${txrx}_phy${n}
+        } else {
+          ad_connect  ${u_xcvr}/${txrx}_${phys_lane} ${a_jesd}/gt${n}_${txrx}
+        }
+      }
+
+      create_bd_port -dir ${data_dir} ${m_data}_${m}_p
+      create_bd_port -dir ${data_dir} ${m_data}_${m}_n
+      ad_connect  ${u_xcvr}/${txrx}_${m}_p ${m_data}_${m}_p
+      ad_connect  ${u_xcvr}/${txrx}_${m}_n ${m_data}_${m}_n
     }
 
-    create_bd_port -dir ${data_dir} ${m_data}_${m}_p
-    create_bd_port -dir ${data_dir} ${m_data}_${m}_n
-    ad_connect  ${u_xcvr}/${txrx}_${m}_p ${m_data}_${m}_p
-    ad_connect  ${u_xcvr}/${txrx}_${m}_n ${m_data}_${m}_n
+    for {set n $no_of_lanes} {$n < $max_no_of_lanes} {incr n} {
+
+      set m [expr ($n + $index)]
+
+      if {$lane_map != {}} {
+        set phys_lane [lindex $lane_map $n]
+      } else {
+        set phys_lane $m
+      }
+
+      create_bd_port -dir ${data_dir} ${m_data}_${m}_p
+      create_bd_port -dir ${data_dir} ${m_data}_${m}_n
+      ad_connect  ${u_xcvr}/${txrx}_${m}_p ${m_data}_${m}_p
+      ad_connect  ${u_xcvr}/${txrx}_${m}_n ${m_data}_${m}_n
+      ad_connect  ${link_clk} ${u_xcvr}/${txrx}_clk_${phys_lane}
+
+      if {$tx_or_rx_n == 0} {
+        if {$jesd204_type == 0} {
+          if {$link_mode == 1} {
+	    ad_connect  ${a_jesd}/phy_en_char_align ${u_xcvr}/${txrx}_calign_${phys_lane}
+          }
+	}
+      }
+    }
   }
-
+  
   if {$jesd204_type == 0} {
     ad_connect  ${a_jesd}/sysref $m_sysref
     if {$link_mode == 1} {
@@ -460,11 +553,11 @@ proc ad_xcvrcon {u_xcvr a_xcvr a_jesd {lane_map {}} {link_clk {}} {device_clk {}
   }
 
   if {$tx_or_rx_n == 0} {
-    set xcvr_rx_index [expr ($xcvr_rx_index + $no_of_lanes)]
+    set xcvr_rx_index [expr ($xcvr_rx_index + $max_no_of_lanes)]
   }
 
   if {$tx_or_rx_n == 1} {
-    set xcvr_tx_index [expr ($xcvr_tx_index + $no_of_lanes)]
+    set xcvr_tx_index [expr ($xcvr_tx_index + $max_no_of_lanes)]
   }
 }
 ## Connect all the PLL clock and reset ports of the transceiver IP to a clock
@@ -482,6 +575,32 @@ proc ad_xcvrpll {m_src m_dst} {
 
 ###################################################################################################
 ###################################################################################################
+
+## Create an memory mapped interface connection to PS8 IP, using a
+#  HPC0 high speed interface.
+#
+#  \param[p_clk]  - name of the clock or reset source
+#  \param[p_name] - name or list of names of the clock or reset sink
+#
+proc ad_mem_hpc0_interconnect {p_clk p_name} {
+
+  global sys_zynq
+
+  if {$sys_zynq == 2} {ad_mem_hpx_interconnect "HPC0" $p_clk $p_name}
+}
+
+## Create an memory mapped interface connection to PS8 IP, using a
+#  HPC1 high speed interface.
+#
+#  \param[p_clk]  - name of the clock or reset source
+#  \param[p_name] - name or list of names of the clock or reset sink
+#
+proc ad_mem_hpc1_interconnect {p_clk p_name} {
+
+  global sys_zynq
+
+  if {$sys_zynq == 2} {ad_mem_hpx_interconnect "HPC1" $p_clk $p_name}
+}
 
 ## Create an memory mapped interface connection to a MIG or PS7/8 IP, using a
 #  HP0 high speed interface in case of PSx.
@@ -568,6 +687,8 @@ proc ad_mem_hpx_interconnect {p_sel p_clk p_name} {
 
   global sys_zynq
   global sys_ddr_addr_seg
+  global sys_hpc0_interconnect_index
+  global sys_hpc1_interconnect_index
   global sys_hp0_interconnect_index
   global sys_hp1_interconnect_index
   global sys_hp2_interconnect_index
@@ -638,6 +759,30 @@ proc ad_mem_hpx_interconnect {p_sel p_clk p_name} {
     set m_interconnect_index $sys_hp3_interconnect_index
     set m_interconnect_cell [get_bd_cells axi_hp3_interconnect]
     set m_addr_seg [get_bd_addr_segs sys_ps7/S_AXI_HP3/HP3_DDR_LOWOCM]
+  }
+
+  if {($p_sel eq "HPC0") && ($sys_zynq == 2)} {
+    if {$sys_hpc0_interconnect_index < 0} {
+      set p_name_int sys_ps8/S_AXI_HPC0_FPD
+      set_property CONFIG.PSU__USE__S_AXI_GP0 {1} [get_bd_cells sys_ps8]
+      set_property CONFIG.PSU__AFI0_COHERENCY {1} [get_bd_cells sys_ps8]
+      ad_ip_instance smartconnect axi_hpc0_interconnect
+    }
+    set m_interconnect_index $sys_hpc0_interconnect_index
+    set m_interconnect_cell [get_bd_cells axi_hpc0_interconnect]
+    set m_addr_seg [get_bd_addr_segs sys_ps8/SAXIGP0/HPC0_DDR_*]
+  }
+
+  if {($p_sel eq "HPC1") && ($sys_zynq == 2)} {
+    if {$sys_hpc1_interconnect_index < 0} {
+      set p_name_int sys_ps8/S_AXI_HPC1_FPD
+      set_property CONFIG.PSU__USE__S_AXI_GP1 {1} [get_bd_cells sys_ps8]
+      set_property CONFIG.PSU__AFI1_COHERENCY {1} [get_bd_cells sys_ps8]
+      ad_ip_instance smartconnect axi_hpc1_interconnect
+    }
+    set m_interconnect_index $sys_hpc1_interconnect_index
+    set m_interconnect_cell [get_bd_cells axi_hpc1_interconnect]
+    set m_addr_seg [get_bd_addr_segs sys_ps8/SAXIGP1/HPC1_DDR_*]
   }
 
   if {($p_sel eq "HP0") && ($sys_zynq == 2)} {
@@ -768,6 +913,8 @@ proc ad_mem_hpx_interconnect {p_sel p_clk p_name} {
 
   if {$p_sel eq "SIM"} {set sys_mem_interconnect_index $m_interconnect_index}
   if {$p_sel eq "MEM"} {set sys_mem_interconnect_index $m_interconnect_index}
+  if {$p_sel eq "HPC0"} {set sys_hpc0_interconnect_index $m_interconnect_index}
+  if {$p_sel eq "HPC1"} {set sys_hpc1_interconnect_index $m_interconnect_index}
   if {$p_sel eq "HP0"} {set sys_hp0_interconnect_index $m_interconnect_index}
   if {$p_sel eq "HP1"} {set sys_hp1_interconnect_index $m_interconnect_index}
   if {$p_sel eq "HP2"} {set sys_hp2_interconnect_index $m_interconnect_index}

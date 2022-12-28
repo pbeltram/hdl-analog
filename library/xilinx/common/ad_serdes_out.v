@@ -1,6 +1,6 @@
 // ***************************************************************************
 // ***************************************************************************
-// Copyright 2014 - 2017 (c) Analog Devices, Inc. All rights reserved.
+// Copyright 2014 - 2022 (c) Analog Devices, Inc. All rights reserved.
 //
 // In this HDL repository, there are many different and unique modules, consisting
 // of various HDL (Verilog or VHDL) components. The individual modules are
@@ -42,14 +42,14 @@ module ad_serdes_out #(
   parameter   CMOS_LVDS_N = 0,
   parameter   DDR_OR_SDR_N = 1,
   parameter   SERDES_FACTOR = 8,
-  parameter   DATA_WIDTH = 16) (
+  parameter   DATA_WIDTH = 16
+) (
 
   // reset and clocks
 
   input                       rst,
   input                       clk,
   input                       div_clk,
-  input                       loaden,
 
   // data interface
   input                       data_oe,
@@ -63,7 +63,8 @@ module ad_serdes_out #(
   input   [(DATA_WIDTH-1):0]  data_s7,   // last bit to be transmitted
   output  [(DATA_WIDTH-1):0]  data_out_se,
   output  [(DATA_WIDTH-1):0]  data_out_p,
-  output  [(DATA_WIDTH-1):0]  data_out_n);
+  output  [(DATA_WIDTH-1):0]  data_out_n
+);
 
   localparam  SEVEN_SERIES  = 1;
   localparam  ULTRASCALE  = 2;
@@ -75,41 +76,48 @@ module ad_serdes_out #(
                           FPGA_TECHNOLOGY == ULTRASCALE_PLUS ? "ULTRASCALE_PLUS" :
                           "UNSUPPORTED";
 
+  // internal registers
+
+  reg [6:0] serdes_rst_seq;
 
   // internal signals
 
-  wire    [(DATA_WIDTH-1):0]  data_out_s;
-  wire    [(DATA_WIDTH-1):0]  serdes_shift1_s;
-  wire    [(DATA_WIDTH-1):0]  serdes_shift2_s;
-  wire    [(DATA_WIDTH-1):0]  data_t;
-  wire    buffer_disable;
+  wire  [(DATA_WIDTH-1):0]  data_out_s;
+  wire  [(DATA_WIDTH-1):0]  serdes_shift1_s;
+  wire  [(DATA_WIDTH-1):0]  serdes_shift2_s;
+  wire  [(DATA_WIDTH-1):0]  data_t;
+  wire  buffer_disable;
+  wire  serdes_rst = serdes_rst_seq[6];
 
-  assign data_out_se =  data_out_s;
-
-  assign buffer_disable = ~data_oe;
   // instantiations
 
-  reg [6:0] serdes_rst_seq;
-  wire      serdes_rst     = serdes_rst_seq [6];
+  assign data_out_se =  data_out_s;
+  assign buffer_disable = ~data_oe;
 
-  always @ (posedge div_clk)
-  begin
-      if   (rst) serdes_rst_seq [6:0] <= 7'b0001110;
-      else       serdes_rst_seq [6:0] <= {serdes_rst_seq [5:0], 1'b0};
+  always @ (posedge div_clk) begin
+    if (rst) begin
+      serdes_rst_seq [6:0] <= 7'b0001110;
+    end else begin
+      serdes_rst_seq [6:0] <= {serdes_rst_seq [5:0], 1'b0};
+    end
   end
+
+  // transmit data path: oserdes -> obuf
 
   genvar l_inst;
   generate
   for (l_inst = 0; l_inst <= (DATA_WIDTH-1); l_inst = l_inst + 1) begin: g_data
 
+    // oserdes
+
     if (FPGA_TECHNOLOGY == SEVEN_SERIES) begin
-      OSERDESE2  #(
+      OSERDESE2 #(
         .DATA_RATE_OQ (DR_OQ_DDR),
         .DATA_RATE_TQ ("SDR"),
         .DATA_WIDTH (SERDES_FACTOR),
         .TRISTATE_WIDTH (1),
-        .SERDES_MODE ("MASTER"))
-      i_serdes (
+        .SERDES_MODE ("MASTER")
+      ) i_serdes (
         .D1 (data_s0[l_inst]),
         .D2 (data_s1[l_inst]),
         .D3 (data_s2[l_inst]),
@@ -140,10 +148,10 @@ module ad_serdes_out #(
     end
 
     if (FPGA_TECHNOLOGY == ULTRASCALE || FPGA_TECHNOLOGY == ULTRASCALE_PLUS) begin
-      OSERDESE3  #(
+      OSERDESE3 #(
         .DATA_WIDTH (SERDES_FACTOR),
-        .SIM_DEVICE (SIM_DEVICE))
-      i_serdes (
+        .SIM_DEVICE (SIM_DEVICE)
+      ) i_serdes (
         .D ({data_s7[l_inst],
              data_s6[l_inst],
              data_s5[l_inst],
@@ -160,28 +168,20 @@ module ad_serdes_out #(
         .RST (serdes_rst));
     end
 
-    if (CMOS_LVDS_N == 0) begin
+    // obuf
 
-      OBUFTDS i_obuf (
+    if (CMOS_LVDS_N == 0) begin
+      OBUFTDS i_obuftds (
         .T (data_t[l_inst]),
         .I (data_out_s[l_inst]),
         .O (data_out_p[l_inst]),
         .OB (data_out_n[l_inst]));
-
     end else begin
-
       OBUFT i_obuf (
         .T (data_t[l_inst]),
         .I (data_out_s[l_inst]),
         .O (data_out_p[l_inst]));
-
     end
-
   end
   endgenerate
-
 endmodule
-
-// ***************************************************************************
-// ***************************************************************************
-

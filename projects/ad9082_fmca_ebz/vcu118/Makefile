@@ -18,10 +18,11 @@ M_DEPS += ../../ad9081_fmca_ebz/vcu118/system_constr.xdc
 M_DEPS += ../../ad9081_fmca_ebz/vcu118/system_bd.tcl
 M_DEPS += ../../ad9081_fmca_ebz/common/versal_transceiver.tcl
 M_DEPS += ../../ad9081_fmca_ebz/common/ad9081_fmca_ebz_bd.tcl
+M_DEPS += ../../../library/util_hbm/scripts/adi_util_hbm.tcl
 M_DEPS += ../../../library/jesd204/scripts/jesd204.tcl
 M_DEPS += ../../../library/common/ad_iobuf.v
-M_DEPS += ../../../library/common/ad_edge_detect.v
 M_DEPS += ../../../library/common/ad_3w_spi.v
+M_DEPS += ../../../library/axi_tdd/scripts/axi_tdd.tcl
 
 LIB_DEPS += axi_dmac
 LIB_DEPS += axi_sysid
@@ -38,10 +39,10 @@ LIB_DEPS += jesd204/jesd204_versal_gt_adapter_tx
 LIB_DEPS += sysid_rom
 LIB_DEPS += util_adcfifo
 LIB_DEPS += util_dacfifo
-LIB_DEPS += util_fifo2axi_bridge
+LIB_DEPS += util_do_ram
+LIB_DEPS += util_hbm
 LIB_DEPS += util_pack/util_cpack2
 LIB_DEPS += util_pack/util_upack2
-LIB_DEPS += util_tdd_sync
 LIB_DEPS += xilinx/axi_adxcvr
 LIB_DEPS += xilinx/util_adxcvr
 

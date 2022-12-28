@@ -3,18 +3,6 @@
 set family "none"
 set device "none"
 
-## Define the supported tool version
-if {![info exists REQUIRED_QUARTUS_VERSION]} {
-  set REQUIRED_QUARTUS_VERSION "21.2.0"
-}
-
-## Define the ADI_IGNORE_VERSION_CHECK environment variable to skip version check
-if {[info exists ::env(ADI_IGNORE_VERSION_CHECK)]} {
-  set IGNORE_VERSION_CHECK 1
-} elseif {![info exists IGNORE_VERSION_CHECK]} {
-  set IGNORE_VERSION_CHECK 0
-}
-
 ## Create a project.
 #
 # \param[project_name] - name of the project, must contain a valid carrier name
@@ -34,6 +22,14 @@ proc adi_project {project_name {parameter_list {}}} {
   global IGNORE_VERSION_CHECK
   global QUARTUS_PRO_ISUSED
 
+  if {![info exists ::env(ADI_PROJECT_DIR)]} {
+    set actual_project_name $project_name
+    set ad_project_dir ""
+  } else {
+    set actual_project_name "$::env(ADI_PROJECT_DIR)${project_name}"
+    set ad_project_dir $::env(ADI_PROJECT_DIR)
+  }
+
   # check $ALT_NIOS_MMU_ENABLED environment variables
 
   set mmu_enabled 1
@@ -49,46 +45,43 @@ proc adi_project {project_name {parameter_list {}}} {
     set quartus_pro_isused $QUARTUS_PRO_ISUSED
   }
 
-  if [regexp "_a10gx$" $project_name] {
+  if [regexp "_a10gx" $project_name] {
     set family "Arria 10"
     set device 10AX115S2F45I1SG
-    set system_qip_file system_bd/system_bd.qip
   }
 
-  if [regexp "_a10soc$" $project_name] {
+  if [regexp "_a10soc" $project_name] {
     set family "Arria 10"
     set device 10AS066N3F40E2SG
-    set system_qip_file system_bd/system_bd.qip
   }
 
-  if [regexp "_s10soc$" $project_name] {
+  if [regexp "_s10soc" $project_name] {
     set family "Stratix 10"
     set device 1SX280HU2F50E1VGAS
-    set system_qip_file system_bd/system_bd.qip
   }
 
-  if [regexp "_c5soc$" $project_name] {
+  if [regexp "_c5soc" $project_name] {
     set family "Cyclone V"
     set device 5CSXFC6D6F31C8ES
-    set system_qip_file system_bd/synthesis/system_bd.qip
+    set system_qip_file ${ad_project_dir}system_bd/synthesis/system_bd.qip
   }
 
-  if [regexp "_de10nano$" $project_name] {
+  if [regexp "_de10nano" $project_name] {
     set family "Cyclone V"
     set device 5CSEBA6U23I7DK
-    set system_qip_file system_bd/synthesis/system_bd.qip
+    set system_qip_file ${ad_project_dir}system_bd/synthesis/system_bd.qip
   }
 
-  if [regexp "_a5soc$" $project_name] {
+  if [regexp "_a5soc" $project_name] {
     set family "Arria V"
     set device 5ASTFD5K3F40I3ES
-    set system_qip_file system_bd/synthesis/system_bd.qip
+    set system_qip_file ${ad_project_dir}system_bd/synthesis/system_bd.qip
   }
 
-  if [regexp "_a5gt$" $project_name] {
+  if [regexp "_a5gt" $project_name] {
     set family "Arria V"
     set device 5AGTFD7K3F40I3
-    set system_qip_file system_bd/synthesis/system_bd.qip
+    set system_qip_file ${ad_project_dir}system_bd/synthesis/system_bd.qip
   }
 
   # version check
@@ -116,11 +109,14 @@ proc adi_project {project_name {parameter_list {}}} {
 
   # project
 
-  project_new $project_name -overwrite
+  project_new $actual_project_name -overwrite
 
   # library paths
-
-  set ad_lib_folders "$ad_hdl_dir/library/**/*;$ad_ghdl_dir/library/**/*"
+  if {[info exists ::env(ADI_GHDL_DIR)]} {
+    set ad_lib_folders "$ad_hdl_dir/library/**/*;$ad_ghdl_dir/library/**/*"
+  } else {
+    set ad_lib_folders "$ad_hdl_dir/library/**/*"
+  }
 
   set_user_option -name USER_IP_SEARCH_PATHS $ad_lib_folders
   set_global_assignment -name IP_SEARCH_PATHS $ad_lib_folders
@@ -141,13 +137,22 @@ proc adi_project {project_name {parameter_list {}}} {
   puts $QFILE "set project_name $project_name"
   puts $QFILE "set mmu_enabled $mmu_enabled"
   puts $QFILE "set ad_hdl_dir $ad_hdl_dir"
-  puts $QFILE "set ad_ghdl_dir $ad_ghdl_dir"
+  if {[info exists ::env(ADI_GHDL_DIR)]} {
+    puts $QFILE "set ad_ghdl_dir $ad_ghdl_dir"
+  }
+  if {[info exists ::env(ADI_PROJECT_DIR)]} {
+    puts $QFILE "set ad_project_dir $::env(ADI_PROJECT_DIR)"
+  }
   puts $QFILE "package require qsys"
   puts $QFILE "set_module_property NAME {system_bd}"
   puts $QFILE "set_project_property DEVICE_FAMILY {$family}"
   puts $QFILE "set_project_property DEVICE $device"
   puts $QFILE "foreach {param value} {$parameter_list} { set ad_project_params(\$param) \$value }"
-  puts $QFILE "source system_qsys.tcl"
+  if {[info exists ::env(ADI_PROJECT_DIR)]} {
+    puts $QFILE "source ../system_qsys.tcl"
+  } else {
+    puts $QFILE "source system_qsys.tcl"
+  }
   if {$quartus_pro_isused == 1} {
     puts $QFILE "set_domain_assignment {\$system} {qsys_mm.maxAdditionalLatency} {4}"
     puts $QFILE "set_domain_assignment {\$system} {qsys_mm.clockCrossingAdapter} {AUTO}"
@@ -190,9 +195,16 @@ proc adi_project {project_name {parameter_list {}}} {
 
   # default assignments
 
-  set_global_assignment -name QIP_FILE $system_qip_file
-  set_global_assignment -name VERILOG_FILE system_top.v
-  set_global_assignment -name SDC_FILE system_constr.sdc
+  if {$quartus_pro_isused != 1} {
+    set_global_assignment -name QIP_FILE $system_qip_file
+  }
+  if {[info exists ::env(ADI_PROJECT_DIR)]} {
+    set_global_assignment -name VERILOG_FILE ../system_top.v
+    set_global_assignment -name SDC_FILE ../system_constr.sdc
+  } else {
+    set_global_assignment -name VERILOG_FILE system_top.v
+    set_global_assignment -name SDC_FILE system_constr.sdc
+  }
   set_global_assignment -name TOP_LEVEL_ENTITY system_top
   set_global_assignment -name ENABLE_HPS_INTERNAL_TIMING ON
 

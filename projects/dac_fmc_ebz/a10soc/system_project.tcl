@@ -29,8 +29,7 @@
 #      This will allow to generate bit files and not release the source code,
 #      as long as it attaches to an ADI device.
 #
-
-source ../../scripts/adi_env.tcl
+source ../../../scripts/adi_env.tcl
 source ../../scripts/adi_project_intel.tcl
 
 source ../common/config.tcl
@@ -139,5 +138,7 @@ set_instance_assignment -name IO_STANDARD "1.8 V" -to spi_mosi
 set_instance_assignment -name IO_STANDARD "1.8 V" -to spi_miso
 set_instance_assignment -name IO_STANDARD "1.8 V" -to spi_csn_clk
 set_instance_assignment -name IO_STANDARD "1.8 V" -to spi_csn_dac
+
+set_global_assignment -name PLACEMENT_EFFORT_MULTIPLIER 1.2
 
 execute_flow -compile

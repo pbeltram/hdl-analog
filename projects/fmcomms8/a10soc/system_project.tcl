@@ -1,5 +1,4 @@
-
-source ../../scripts/adi_env.tcl
+source ../../../scripts/adi_env.tcl
 source ../../scripts/adi_project_intel.tcl
 
 adi_project fmcomms8_a10soc
@@ -9,7 +8,7 @@ source $ad_hdl_dir/projects/common/a10soc/a10soc_plddr4_assign.tcl
 
 # files
 
-set_global_assignment -name VERILOG_FILE ../common/fmcomms8_spi.v
+set_global_assignment -name VERILOG_FILE $ad_hdl_dir/projects/fmcomms8/common/fmcomms8_spi.v
 set_global_assignment -name VERILOG_FILE $ad_hdl_dir/library/common/ad_iobuf.v
 
 # fmcomms8
@@ -222,5 +221,6 @@ set_instance_assignment -name IO_STANDARD "1.8 V" -to adrv9009_gpio_08_d
 
 # set optimization to get a better timing closure
 set_global_assignment -name OPTIMIZATION_MODE "HIGH PERFORMANCE EFFORT"
+set_global_assignment -name PLACEMENT_EFFORT_MULTIPLIER 1.2
 
 execute_flow -compile

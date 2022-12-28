@@ -1,6 +1,6 @@
 // ***************************************************************************
 // ***************************************************************************
-// Copyright 2014 - 2017 (c) Analog Devices, Inc. All rights reserved.
+// Copyright 2014 - 2022 (c) Analog Devices, Inc. All rights reserved.
 //
 // In this HDL repository, there are many different and unique modules, consisting
 // of various HDL (Verilog or VHDL) components. The individual modules are
@@ -47,7 +47,8 @@ module axi_ad9122_if #(
   parameter   MMCM_VCO_MUL = 12,
   parameter   MMCM_CLK0_DIV = 2,
   parameter   MMCM_CLK1_DIV = 8,
-  parameter   IO_DELAY_GROUP = "dac_if_delay_group") (
+  parameter   IO_DELAY_GROUP = "dac_if_delay_group"
+) (
 
   // dac interface
 
@@ -101,8 +102,8 @@ module axi_ad9122_if #(
   input       [31:0]      up_drp_wdata,
   output      [31:0]      up_drp_rdata,
   output                  up_drp_ready,
-  output                  up_drp_locked);
-
+  output                  up_drp_locked
+);
 
   // internal registers
 
@@ -111,7 +112,6 @@ module axi_ad9122_if #(
   // internal signals
 
   wire            dac_out_clk;
-  wire            loaden_s;
 
   // dac status
 
@@ -130,12 +130,11 @@ module axi_ad9122_if #(
   ad_serdes_out #(
     .FPGA_TECHNOLOGY (FPGA_TECHNOLOGY),
     .DDR_OR_SDR_N (SERDES_OR_DDR_N),
-    .DATA_WIDTH (16))
-  i_serdes_out_data (
+    .DATA_WIDTH (16)
+  ) i_serdes_out_data (
     .rst (dac_rst),
     .clk (dac_clk),
     .div_clk (dac_div_clk),
-    .loaden (loaden_s),
     .data_oe (1'b1),
     .data_s0 (dac_data_i0),
     .data_s1 (dac_data_q0),
@@ -154,12 +153,11 @@ module axi_ad9122_if #(
   ad_serdes_out #(
     .FPGA_TECHNOLOGY (FPGA_TECHNOLOGY),
     .DDR_OR_SDR_N (SERDES_OR_DDR_N),
-    .DATA_WIDTH (1))
-  i_serdes_out_frame (
+    .DATA_WIDTH (1)
+  ) i_serdes_out_frame (
     .rst (dac_rst),
     .clk (dac_clk),
     .div_clk (dac_div_clk),
-    .loaden (loaden_s),
     .data_oe (1'b1),
     .data_s0 (dac_frame_i0),
     .data_s1 (dac_frame_q0),
@@ -178,12 +176,11 @@ module axi_ad9122_if #(
   ad_serdes_out #(
     .FPGA_TECHNOLOGY (FPGA_TECHNOLOGY),
     .DDR_OR_SDR_N (SERDES_OR_DDR_N),
-    .DATA_WIDTH (1))
-  i_serdes_out_clk (
+    .DATA_WIDTH (1)
+  ) i_serdes_out_clk (
     .rst (dac_rst),
     .clk (dac_clk),
     .div_clk (dac_div_clk),
-    .loaden (loaden_s),
     .data_oe (1'b1),
     .data_s0 (1'b1),
     .data_s1 (1'b0),
@@ -207,16 +204,14 @@ module axi_ad9122_if #(
     .MMCM_VCO_DIV (MMCM_VCO_DIV),
     .MMCM_VCO_MUL (MMCM_VCO_MUL),
     .MMCM_CLK0_DIV (MMCM_CLK0_DIV),
-    .MMCM_CLK1_DIV (MMCM_CLK1_DIV))
-  i_serdes_clk (
+    .MMCM_CLK1_DIV (MMCM_CLK1_DIV)
+  ) i_serdes_clk (
     .rst (mmcm_rst),
     .clk_in_p (dac_clk_in_p),
     .clk_in_n (dac_clk_in_n),
     .clk (dac_clk),
     .div_clk (dac_div_clk),
     .out_clk (dac_out_clk),
-    .loaden (loaden_s),
-    .phase (),
     .up_clk (up_clk),
     .up_rstn (up_rstn),
     .up_drp_sel (up_drp_sel),
@@ -228,6 +223,3 @@ module axi_ad9122_if #(
     .up_drp_locked (up_drp_locked));
 
 endmodule
-
-// ***************************************************************************
-// ***************************************************************************

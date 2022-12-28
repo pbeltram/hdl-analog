@@ -96,6 +96,7 @@ _vmake
 *.gen*
 *.xsa
 *.pdi
+
 #
 *.org
 NA/
@@ -127,4 +128,12 @@ webtalk/
 #
 !.project
 !.cproject
+
+library/**/bd/bd.tcl
+*.syn.smsg
+*.syn.summary
+qdb
+tmp-clearbox
+*.bin
+.qsys_edit
 
