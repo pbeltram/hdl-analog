@@ -1,6 +1,9 @@
+###############################################################################
+## Copyright (C) 2022-2023 Analog Devices, Inc. All rights reserved.
+### SPDX short identifier: ADIBSD
+###############################################################################
 
 # cn0561 SPI configuration interface
-
 set_property -dict {PACKAGE_PIN N22 IOSTANDARD LVCMOS25} [get_ports cn0561_spi_sdi]       ; ## FMC_LPC_LA03_P
 set_property -dict {PACKAGE_PIN M22 IOSTANDARD LVCMOS25} [get_ports cn0561_spi_sdo]       ; ## FMC_LPC_LA04_N
 set_property -dict {PACKAGE_PIN N19 IOSTANDARD LVCMOS25} [get_ports cn0561_spi_sclk]      ; ## FMC_LPC_LA01_CC_P
@@ -28,5 +31,3 @@ set_property -dict {PACKAGE_PIN P21 IOSTANDARD LVCMOS25} [get_ports cn0561_gpio5
 set_property -dict {PACKAGE_PIN L17 IOSTANDARD LVCMOS25} [get_ports cn0561_gpio6]         ; ## FMC_LPC_LA13_P
 set_property -dict {PACKAGE_PIN M17 IOSTANDARD LVCMOS25} [get_ports cn0561_gpio7]         ; ## FMC_LPC_LA13_N
 set_property -dict {PACKAGE_PIN L21 IOSTANDARD LVCMOS25} [get_ports cn0561_pinbspi]       ; ## FMC_LPC_LA06_P
-
-set_false_path -to [get_pins -hierarchical * -filter {NAME=~*busy_sync/inst/cdc_sync_stage1_reg[0]/D}]

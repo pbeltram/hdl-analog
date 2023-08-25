@@ -1,6 +1,6 @@
 ####################################################################################
 ####################################################################################
-## Copyright (c) 2018 - 2021 Analog Devices, Inc.
+## Copyright (c) 2018 - 2023 Analog Devices, Inc.
 ### SPDX short identifier: BSD-1-Clause
 ## Auto-generated, do not modify!
 ####################################################################################
@@ -15,6 +15,7 @@ all: lib
 clean:
 	$(MAKE) -C ad463x_data_capture clean
 	$(MAKE) -C axi_ad5766 clean
+	$(MAKE) -C axi_ad7606x clean
 	$(MAKE) -C axi_ad7616 clean
 	$(MAKE) -C axi_ad7768 clean
 	$(MAKE) -C axi_ad777x clean
@@ -136,6 +137,7 @@ clean-all:clean
 lib:
 	$(MAKE) -C ad463x_data_capture
 	$(MAKE) -C axi_ad5766
+	$(MAKE) -C axi_ad7606x
 	$(MAKE) -C axi_ad7616
 	$(MAKE) -C axi_ad7768
 	$(MAKE) -C axi_ad777x

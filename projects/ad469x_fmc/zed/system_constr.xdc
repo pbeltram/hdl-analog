@@ -1,6 +1,9 @@
+###############################################################################
+## Copyright (C) 2020-2023 Analog Devices, Inc. All rights reserved.
+### SPDX short identifier: ADIBSD
+###############################################################################
 
 # ad4696_fmc SPI interface
-
 set_property -dict {PACKAGE_PIN N19 IOSTANDARD LVCMOS25} [get_ports ad469x_spi_sdi]       ; ## D08  FMC_LPC_LA01_CC_P
 set_property -dict {PACKAGE_PIN P17 IOSTANDARD LVCMOS25} [get_ports ad469x_spi_sdo]       ; ## H07  FMC_LPC_LA02_P
 set_property -dict {PACKAGE_PIN N20 IOSTANDARD LVCMOS25} [get_ports ad469x_spi_sclk]      ; ## D09  FMC_LPC_LA01_CC_N
@@ -17,6 +20,5 @@ create_generated_clock -name spi_clk -source [get_pins -filter name=~*CLKIN1 -of
 # relax the SDO path to help closing timing at high frequencies
 set_multicycle_path -setup 8 -to [get_cells -hierarchical -filter {NAME=~*/data_sdo_shift_reg[*]}] -from [get_clocks spi_clk]
 set_multicycle_path -hold  7 -to [get_cells -hierarchical -filter {NAME=~*/data_sdo_shift_reg[*]}] -from [get_clocks spi_clk]
-set_multicycle_path -setup 8 -to [get_cells -hierarchical -filter {NAME=~*/execution/inst/left_aligned_reg*}] -from [get_clocks spi_clk]
-set_multicycle_path -hold  7 -to [get_cells -hierarchical -filter {NAME=~*/execution/inst/left_aligned_reg*}] -from [get_clocks spi_clk]
-
+set_multicycle_path -setup 8 -to [get_cells -hierarchical -filter {NAME=~*/spi_ad469x_execution/inst/left_aligned_reg*}] -from [get_clocks spi_clk]
+set_multicycle_path -hold  7 -to [get_cells -hierarchical -filter {NAME=~*/spi_ad469x_execution/inst/left_aligned_reg*}] -from [get_clocks spi_clk]
