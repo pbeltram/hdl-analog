@@ -106,6 +106,10 @@ proc adi_project {project_name {mode 0} {parameter_list {}} } {
     set device "xczu9eg-ffvb1156-2-e"
     set board [lindex [lsearch -all -inline [get_board_parts] *zcu102*] end]
   }
+  if [regexp "_xu8" $project_name] {
+    set device "xczu4cg-fbvb900-1-e"
+    set board "not-applicable"
+  }
   if [regexp "_vmk180_es1" $project_name] {
     enable_beta_device xcvm*
     xhub::refresh_catalog [xhub::get_xstores xilinx_board_store]
