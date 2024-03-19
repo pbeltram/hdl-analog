@@ -26,7 +26,7 @@
 //
 //   2. An ADI specific BSD license, which can be found in the top level directory
 //      of this repository (LICENSE_ADIBSD), and also on-line at:
-//      https://github.com/analogdevicesinc/hdl/blob/master/LICENSE_ADIBSD
+//      https://github.com/analogdevicesinc/hdl/blob/main/LICENSE_ADIBSD
 //      This will allow to generate bit files and not release the source code,
 //      as long as it attaches to an ADI device.
 //
@@ -196,8 +196,7 @@ module system_top (
 
   assign mssi_sync = mcs_sync_busy | gpio_o[7];
 
-  // TO-DO
-  //assign usb_pd_reset = gpio_o[8];
+  assign usb_pd_reset = 1'b0;
   assign adrv9002_mcssrc = gpio_o[65];
   assign usb_flash_prog_en = gpio_o[66];
   assign fan_en  = 1'b1;

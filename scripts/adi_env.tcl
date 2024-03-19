@@ -15,7 +15,7 @@ if [info exists ::env(ADI_GHDL_DIR)] {
 }
 
 # Define the supported tool version
-set required_vivado_version "2022.2"
+set required_vivado_version "2023.2"
 if {[info exists ::env(REQUIRED_VIVADO_VERSION)]} {
   set required_vivado_version $::env(REQUIRED_VIVADO_VERSION)
 } elseif {[info exists REQUIRED_VIVADO_VERSION]} {
@@ -31,7 +31,7 @@ if {[info exists ::env(ADI_IGNORE_VERSION_CHECK)]} {
 
 # Define the supported tool version
 if {![info exists REQUIRED_QUARTUS_VERSION]} {
-  set REQUIRED_QUARTUS_VERSION "22.4.0"
+  set REQUIRED_QUARTUS_VERSION "23.2.0"
 }
 
 # This helper pocedure retrieves the value of varible from environment if exists,

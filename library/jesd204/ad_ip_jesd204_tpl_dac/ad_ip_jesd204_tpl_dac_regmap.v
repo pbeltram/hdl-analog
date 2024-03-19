@@ -26,7 +26,7 @@
 //
 //   2. An ADI specific BSD license, which can be found in the top level directory
 //      of this repository (LICENSE_ADIBSD), and also on-line at:
-//      https://github.com/analogdevicesinc/hdl/blob/master/LICENSE_ADIBSD
+//      https://github.com/analogdevicesinc/hdl/blob/main/LICENSE_ADIBSD
 //      This will allow to generate bit files and not release the source code,
 //      as long as it attaches to an ADI device.
 //
@@ -47,8 +47,9 @@ module ad_ip_jesd204_tpl_dac_regmap #(
   parameter NUM_CHANNELS = 2,
   parameter DATA_PATH_WIDTH = 16,
   parameter PADDING_TO_MSB_LSB_N = 0,
-  parameter NUM_PROFILES = 1,    // Number of supported JESD profiles
-  parameter EXT_SYNC = 0
+  parameter EXT_SYNC = 0,
+  parameter NUM_PROFILES = 1,   // Number of supported JESD profiles
+  parameter DDS_PHASE_DW = 16
 ) (
   input s_axi_aclk,
   input s_axi_aresetn,
@@ -93,11 +94,11 @@ module ad_ip_jesd204_tpl_dac_regmap #(
   output dac_dds_format,
 
   output [NUM_CHANNELS*16-1:0] dac_dds_scale_0,
-  output [NUM_CHANNELS*16-1:0] dac_dds_init_0,
-  output [NUM_CHANNELS*16-1:0] dac_dds_incr_0,
   output [NUM_CHANNELS*16-1:0] dac_dds_scale_1,
-  output [NUM_CHANNELS*16-1:0] dac_dds_init_1,
-  output [NUM_CHANNELS*16-1:0] dac_dds_incr_1,
+  output [NUM_CHANNELS*DDS_PHASE_DW-1:0] dac_dds_init_0,
+  output [NUM_CHANNELS*DDS_PHASE_DW-1:0] dac_dds_incr_0,
+  output [NUM_CHANNELS*DDS_PHASE_DW-1:0] dac_dds_init_1,
+  output [NUM_CHANNELS*DDS_PHASE_DW-1:0] dac_dds_incr_1,
 
   output [NUM_CHANNELS*16-1:0] dac_pat_data_0,
   output [NUM_CHANNELS*16-1:0] dac_pat_data_1,
@@ -231,6 +232,10 @@ module ad_ip_jesd204_tpl_dac_regmap #(
     .dac_sync_in_status (dac_sync_in_status),
     .dac_frame (),
     .dac_clksel (),
+    .dac_custom_wr(),
+    .dac_custom_rd(32'b0),
+    .dac_custom_control(),
+    .dac_status_if_busy(1'b0),
     .dac_par_type (),
     .dac_par_enb (),
     .dac_r1_mode (),
@@ -274,6 +279,7 @@ module ad_ip_jesd204_tpl_dac_regmap #(
       .COMMON_ID(6'h1 + i/16),
       .CHANNEL_ID (i % 16),
       .CHANNEL_NUMBER (i),
+      .DDS_PHASE_DW (DDS_PHASE_DW),
       .USERPORTS_DISABLE (1),
       .IQCORRECTION_DISABLE (IQCORRECTION_DISABLE),
       .XBAR_ENABLE (XBAR_ENABLE)
@@ -281,11 +287,11 @@ module ad_ip_jesd204_tpl_dac_regmap #(
       .dac_clk (link_clk),
       .dac_rst (dac_rst),
       .dac_dds_scale_1 (dac_dds_scale_0[16*i+:16]),
-      .dac_dds_init_1 (dac_dds_init_0[16*i+:16]),
-      .dac_dds_incr_1 (dac_dds_incr_0[16*i+:16]),
+      .dac_dds_init_1 (dac_dds_init_0[DDS_PHASE_DW*i+:DDS_PHASE_DW]),
+      .dac_dds_incr_1 (dac_dds_incr_0[DDS_PHASE_DW*i+:DDS_PHASE_DW]),
       .dac_dds_scale_2 (dac_dds_scale_1[16*i+:16]),
-      .dac_dds_init_2 (dac_dds_init_1[16*i+:16]),
-      .dac_dds_incr_2 (dac_dds_incr_1[16*i+:16]),
+      .dac_dds_init_2 (dac_dds_init_1[DDS_PHASE_DW*i+:DDS_PHASE_DW]),
+      .dac_dds_incr_2 (dac_dds_incr_1[DDS_PHASE_DW*i+:DDS_PHASE_DW]),
       .dac_pat_data_1 (dac_pat_data_0[16*i+:16]),
       .dac_pat_data_2 (dac_pat_data_1[16*i+:16]),
       .dac_data_sel (dac_data_sel[4*i+:4]),

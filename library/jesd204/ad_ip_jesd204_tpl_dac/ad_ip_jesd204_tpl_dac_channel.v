@@ -26,7 +26,7 @@
 //
 //   2. An ADI specific BSD license, which can be found in the top level directory
 //      of this repository (LICENSE_ADIBSD), and also on-line at:
-//      https://github.com/analogdevicesinc/hdl/blob/master/LICENSE_ADIBSD
+//      https://github.com/analogdevicesinc/hdl/blob/main/LICENSE_ADIBSD
 //      This will allow to generate bit files and not release the source code,
 //      as long as it attaches to an ADI device.
 //
@@ -44,6 +44,7 @@ module ad_ip_jesd204_tpl_dac_channel #(
   parameter DDS_TYPE = 1,
   parameter DDS_CORDIC_DW = 16,
   parameter DDS_CORDIC_PHASE_DW = 16,
+  parameter DDS_PHASE_DW = 16,
   parameter Q_OR_I_N = 0
 ) (
 
@@ -68,11 +69,11 @@ module ad_ip_jesd204_tpl_dac_channel #(
   input       dac_mask_enable,
 
   input [15:0] dac_dds_scale_0,
-  input [15:0] dac_dds_init_0,
-  input [15:0] dac_dds_incr_0,
   input [15:0] dac_dds_scale_1,
-  input [15:0] dac_dds_init_1,
-  input [15:0] dac_dds_incr_1,
+  input [DDS_PHASE_DW-1:0] dac_dds_init_0,
+  input [DDS_PHASE_DW-1:0] dac_dds_incr_0,
+  input [DDS_PHASE_DW-1:0] dac_dds_init_1,
+  input [DDS_PHASE_DW-1:0] dac_dds_incr_1,
 
   input [15:0] dac_pat_data_0,
   input [15:0] dac_pat_data_1,
@@ -159,7 +160,7 @@ module ad_ip_jesd204_tpl_dac_channel #(
   ad_dds #(
     .DISABLE (DATAPATH_DISABLE),
     .DDS_DW (CONVERTER_RESOLUTION),
-    .PHASE_DW (16),
+    .PHASE_DW (DDS_PHASE_DW),
     .DDS_TYPE (DDS_TYPE),
     .CORDIC_DW (DDS_CORDIC_DW),
     .CORDIC_PHASE_DW (DDS_CORDIC_PHASE_DW),

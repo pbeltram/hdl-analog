@@ -3,7 +3,7 @@
 ## SPDX short identifier: BSD-1-Clause
 ####################################################################################
 
-# Assumes this file is in prpojects/scripts/project-xilinx.mk
+# Assumes this file is in projects/scripts/project-xilinx.mk
 HDL_PROJECT_PATH := $(subst scripts/project-xilinx.mk,,$(lastword $(MAKEFILE_LIST)))
 HDL_LIBRARY_PATH := $(HDL_PROJECT_PATH)../library/
 
@@ -68,7 +68,8 @@ CLEAN_DIRS := $(dir $(wildcard */*_vivado.log))
 M_DEPS += system_project.tcl
 M_DEPS += system_bd.tcl
 M_DEPS += $(wildcard system_top*.v)
-M_DEPS += $(wildcard system_constr.xdc) # Not all projects have this file
+M_DEPS += $(wildcard system_constr*.xdc) # Not all projects have this file
+M_DEPS += $(wildcard system_constr*.tcl) # Not all projects have this file
 M_DEPS += $(HDL_PROJECT_PATH)scripts/adi_project_xilinx.tcl
 M_DEPS += $(HDL_PROJECT_PATH)../scripts/adi_env.tcl
 M_DEPS += $(HDL_PROJECT_PATH)scripts/adi_board.tcl
@@ -77,7 +78,9 @@ M_DEPS += $(foreach dep,$(LIB_DEPS),$(HDL_LIBRARY_PATH)$(dep)/component.xml)
 
 .PHONY: all lib clean clean-all
 
-all: lib $(PROJECT_NAME).sdk/system_top.xsa
+all: $(PROJECT_NAME).sdk/system_top.xsa
+
+lib: $(M_DEPS)
 
 clean:
 	-rm -f reference.dcp
@@ -87,11 +90,9 @@ clean:
 	-rm -Rf ${DIR_NAME}
 
 clean-all: clean
+	@rm -Rf $(CLEAN_DIRS)
 	@for lib in $(LIB_DEPS); do \
 		$(MAKE) -C $(HDL_LIBRARY_PATH)$${lib} clean; \
-	done
-	@for dir in ${CLEAN_DIRS}; do \
-		rm -Rf $${dir}; \
 	done
 
 MODE ?= "default"
@@ -114,12 +115,12 @@ $(PROJECT_NAME).sdk/system_top.xsa: $(M_DEPS)
 		$(PROJECT_NAME)_vivado.log, \
 		$(HL)$(PROJECT_NAME)$(NC) project)
 
-lib:
-	@for lib in $(LIB_DEPS); do \
-		if [ -n "${REQUIRED_VIVADO_VERSION}" ]; then \
-			$(MAKE) -C $(HDL_LIBRARY_PATH)$${lib} xilinx REQUIRED_VIVADO_VERSION=${REQUIRED_VIVADO_VERSION} || exit $$?; \
-		else \
-			$(MAKE) -C $(HDL_LIBRARY_PATH)$${lib} xilinx || exit $$?; \
-		fi; \
-	done
-
+$(HDL_LIBRARY_PATH)%/component.xml: TARGET:=xilinx
+FORCE:
+$(HDL_LIBRARY_PATH)%/component.xml: FORCE
+	flock $(dir $@).lock -c " \
+	if [ -n \"${REQUIRED_VIVADO_VERSION}\" ]; then \
+		$(MAKE) -C $(dir $@) $(TARGET) REQUIRED_VIVADO_VERSION=${REQUIRED_VIVADO_VERSION}; \
+	else \
+		$(MAKE) -C $(dir $@) $(TARGET); \
+	fi"; exit $$?
