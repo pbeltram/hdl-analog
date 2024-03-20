@@ -33,7 +33,7 @@ ipcache
 *.err
 *_html
 *.sld
-*.txt
+#*.txt
 *.qsys
 *.csv
 xst
@@ -96,6 +96,39 @@ _vmake
 *.gen*
 *.xsa
 *.pdi
+
+#
+*.org
+NA/
+
+#Project specific developement tools ignores
+temp/
+*.org
+*.delme
+*.log
+*.jou
+*.str
+vivado_pid*.zip
+.metadata/
+.metadata.*/
+RemoteSystemsTempFiles/
+webtalk/
+
+.Xil/
+#*.tar.gz
+
+#
+# git files that we don't want to ignore even it they are dot-files
+#
+!.gitignore
+!.mailmap
+
+#
+# XSDK files we don't want to ignore
+#
+!.project
+!.cproject
+
 library/**/bd/bd.tcl
 *.syn.smsg
 *.syn.summary
