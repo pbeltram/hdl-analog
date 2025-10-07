@@ -1,5 +1,5 @@
 ###############################################################################
-## Copyright (C) 2016-2024 Analog Devices, Inc. All rights reserved.
+## Copyright (C) 2016-2025 Analog Devices, Inc. All rights reserved.
 ### SPDX short identifier: ADIBSD
 ###############################################################################
 
@@ -70,11 +70,10 @@ ad_connect util_sigma_delta_spi/resetn $hier_spi_engine/resetn
 
 ad_connect $hier_spi_engine/m_spi util_sigma_delta_spi/s_spi
 ad_connect util_sigma_delta_spi/data_ready $hier_spi_engine/trigger
-ad_connect $hier_spi_engine/${hier_spi_engine}_execution/active util_sigma_delta_spi/spi_active
 ad_connect util_sigma_delta_spi/m_spi spi
 
 ad_ip_instance c_counter_binary phase_gen
-ad_ip_instance xlslice phase_slice
+ad_ip_instance ilslice phase_slice
 create_bd_port -dir O excitation
 
 set excitation_freq 1020
@@ -98,6 +97,7 @@ current_bd_instance /processing
 	create_bd_pin -dir I -from 31 -to 0 phase
 	create_bd_pin -dir O overflow
 	create_bd_pin -dir I -from 13 -to 0 channel_enable
+	create_bd_pin -dir O dma_wr_sync
 	create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S_AXIS_SAMPLE
 	create_bd_intf_pin -mode Master -vlnv analog.com:interface:fifo_wr_rtl:1.0 DMA_WR
 
@@ -148,7 +148,7 @@ current_bd_instance /processing
 	ad_ip_parameter lpf	CONFIG.Has_ARESETn true
 	ad_ip_parameter lpf	CONFIG.Reset_Data_Vector false
 
-  ad_ip_instance util_vector_logic overflow_or
+  ad_ip_instance ilvector_logic overflow_or
 	ad_ip_parameter overflow_or	CONFIG.C_SIZE 1
 	ad_ip_parameter overflow_or	CONFIG.C_OPERATION or
 
@@ -211,6 +211,7 @@ current_bd_instance /processing
 
 	ad_connect channel_enable sequencer/channel_enable
 	ad_connect sequencer/dma_wr DMA_WR
+	ad_connect sequencer/dma_wr_sync dma_wr_sync
 
 	ad_connect phase_data_sync/overflow overflow_or/Op1
 	ad_connect sequencer/overflow overflow_or/Op2
@@ -242,6 +243,7 @@ connect_bd_net -net $sys_cpu_resetn \
 	[get_bd_pins /axi_dma/m_dest_axi_aresetn]
 
 ad_connect /processing/dma_wr /axi_dma/fifo_wr
+ad_connect /processing/dma_wr_sync /axi_dma/sync
 
 ad_cpu_interconnect 0x43c00000 /axi_adc
 ad_cpu_interconnect 0x44a00000 $hier_spi_engine/${hier_spi_engine}_axi_regmap

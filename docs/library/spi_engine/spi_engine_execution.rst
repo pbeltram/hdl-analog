@@ -5,7 +5,8 @@ SPI Engine Execution Module
 
 .. hdl-component-diagram::
 
-The SPI Engine Execution peripheral forms the heart of the SPI Engine framework.
+The :git-hdl:`SPI Engine Execution <library/spi_engine/spi_engine_execution>`
+IP core is the heart of the SPI Engine framework.
 It is responsible for handling a SPI Engine control stream and translates it
 into low-level SPI bus transactions.
 
@@ -51,15 +52,12 @@ Signal and Interface Pins
      - All other signals are synchronous to this clock.
    * - resetn
      - Resets the internal state machine of the core.
-   * - active
-     - Indicates whether the peripheral is currently active and processing
-       commands.
    * - ctrl
-     - :ref:`spi_engine control-interface` slave.
+     - :ref:`spi_engine control-interface` subordinate.
        SPI Engine Control stream that contains commands and data for the
        execution module.
    * - spi
-     - :ref:`spi_engine spi-bus-interface` master.
+     - :ref:`spi_engine spi-bus-interface` controller.
        Low-level SPI bus interface that is controlled by peripheral.
 
 Theory of Operation
@@ -71,8 +69,6 @@ SPI Engine command stream into low-level SPI bus access.
 
 Communication with a command stream generator happens via the ``ctrl``
 interface and the low-level SPI access is handled on the ``spi`` interface.
-The ``active`` signal is asserted as long as the peripheral is busy executing
-incoming commands.
 
 Internally the SPI Engine execution module consists of an instruction encoder
 that translates the incoming commands into an internal control signal, a

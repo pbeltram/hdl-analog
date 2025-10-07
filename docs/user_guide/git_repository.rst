@@ -34,6 +34,11 @@ following few steps:
    `these <https://help.github.com/articles/cloning-a-repository/>`__
    instructions
 
+.. note::
+
+   If you want to contribute to our repository, check out this guide
+   :ref:`contributing`.
+
 Folder structure
 -------------------------------------------------------------------------------
 
@@ -123,7 +128,7 @@ The library are structured as follows
    .
    +-- library
    ¦   +-- ad463x_data_capture
-   ¦   +-- axi_ad3552r
+   ¦   +-- axi_ad35xxr
    ¦   +-- axi_ad4858
    ¦   +-- axi_ad5766
    ¦   +-- axi_ad7606x

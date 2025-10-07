@@ -1,5 +1,5 @@
 ###############################################################################
-## Copyright (C) 2014-2023 Analog Devices, Inc. All rights reserved.
+## Copyright (C) 2014-2023, 2025 Analog Devices, Inc. All rights reserved.
 ### SPDX short identifier: ADIBSD
 ###############################################################################
 
@@ -28,6 +28,17 @@ set ADI_USE_INCR_COMP 1
 ## Set to enable power optimization
 set ADI_POWER_OPTIMIZATION 0
 
+## Set to generate .bin (for selmap)
+if {![info exists ::env(ADI_GENERATE_BIN)]} {
+  set ADI_GENERATE_BIN 0
+} else {
+  if {[string equal $::env(ADI_GENERATE_BIN) n]} {
+     set ADI_GENERATE_BIN 0
+  } else {
+     set ADI_GENERATE_BIN 1
+  }
+}
+
 ## Initialize global variables
 set p_board "not-applicable"
 set p_device "none"
@@ -45,8 +56,8 @@ set p_prcfg_status ""
 # \param[parameter_list] - a list of global parameters (parameters of the
 # system_top module)
 #
-# Supported carrier names are: ac701, kc705, vc707, vcu118, vcu128, kcu105, zed,
-# microzed, zc702, zc706, mitx405, zcu102.
+# Supported carrier names are: ac701, vcu118, kcu105, zed, microzed, zc702,
+# zc706, mitx405, zcu102.
 #
 proc adi_project {project_name {mode 0} {parameter_list {}} } {
 
@@ -58,21 +69,9 @@ proc adi_project {project_name {mode 0} {parameter_list {}} } {
     set device "xc7a200tfbg676-2"
     set board [lindex [lsearch -all -inline [get_board_parts] *ac701*] end]
   }
-  if [regexp "_kc705" $project_name] {
-    set device "xc7k325tffg900-2"
-    set board [lindex [lsearch -all -inline [get_board_parts] *kc705*] end]
-  }
-  if [regexp "_vc707" $project_name] {
-    set device "xc7vx485tffg1761-2"
-    set board [lindex [lsearch -all -inline [get_board_parts] *vc707*] end]
-  }
   if [regexp "_vcu118" $project_name] {
     set device "xcvu9p-flga2104-2L-e"
     set board [lindex [lsearch -all -inline [get_board_parts] *vcu118*] end]
-  }
-  if [regexp "_vcu128" $project_name] {
-    set device "xcvu37p-fsvh2892-2L-e"
-    set board [lindex [lsearch -all -inline [get_board_parts] *vcu128:part0*] end]
   }
   if [regexp "_kcu105" $project_name] {
     set device "xcku040-ffva1156-2-e"
@@ -122,6 +121,10 @@ proc adi_project {project_name {mode 0} {parameter_list {}} } {
     set device "xcvc1902-vsva2197-2MP-e-S"
     set board [lindex [lsearch -all -inline [get_board_parts] *vck190*] end]
   }
+  if [regexp "_vpk180" $project_name] {
+    set device "xcvp1802-lsvc4072-2MP-e-S"
+    set board [lindex [lsearch -all -inline [get_board_parts] *vpk180*] end]
+  }
   if [regexp "_vc709" $project_name] {
     set device "xc7vx690tffg1761-2"
     set board [lindex [lsearch -all -inline [get_board_parts] *vc709*] end]
@@ -129,6 +132,10 @@ proc adi_project {project_name {mode 0} {parameter_list {}} } {
   if [regexp "_kv260" $project_name] {
     set device "xck26-sfvc784-2LV-c"
     set board [lindex [lsearch -all -inline [get_board_parts] *kv260*] end]
+  }
+  if [regexp "_k26" $project_name] {
+    set device "xck26-sfvc784-2LVI-i"
+    set board [lindex [lsearch -all -inline [get_board_parts] *k26*] end]
   }
 
   adi_project_create $project_name $mode $parameter_list $device $board
@@ -339,9 +346,11 @@ proc adi_project_files {project_name project_files} {
 proc adi_project_run {project_name} {
 
   global ad_project_dir
+  global sys_zynq
   global ADI_POWER_OPTIMIZATION
   global ADI_USE_OOC_SYNTHESIS
   global ADI_MAX_OOC_JOBS
+  global ADI_GENERATE_BIN
 
   if {![info exists ::env(ADI_PROJECT_DIR)]} {
     set actual_project_name $project_name
@@ -553,9 +562,25 @@ proc adi_project_run {project_name} {
   if { [string match "*VIOLATED*" $timing_string] == 1 ||
        [string match "*Timing constraints are not met*" $timing_string] == 1} {
     write_hw_platform -fixed -force  -include_bit -file ${actual_project_name}.sdk/system_top_bad_timing.xsa
+    # Generate .bin file only for non Versal designs
+    if {$ADI_GENERATE_BIN == 1} {
+      if {$sys_zynq == 3} {
+        puts "Bin generation skipped, Versal families do not support it."
+      } else {
+        write_bitstream -bin_file ${actual_project_name}.sdk/system_top_bad_timing.bit
+      }
+    }
     return -code error [format "ERROR: Timing Constraints NOT met!"]
   } else {
     write_hw_platform -fixed -force  -include_bit -file ${actual_project_name}.sdk/system_top.xsa
+    # Generate .bin file only for non Versal designs
+    if {$ADI_GENERATE_BIN == 1} {
+      if {$sys_zynq == 3} {
+        puts "Bin generation skipped, Versal families do not support it."
+      } else {
+        write_bitstream -bin_file ${actual_project_name}.sdk/system_top.bit
+      }
+    }
   }
 }
 
@@ -700,4 +725,3 @@ proc adi_project_verify {project_name} {
     return -code error [format "ERROR: Timing Constraints NOT met!"]
   }
 }
-

@@ -3,15 +3,21 @@
 Customize HDL projects
 ===============================================================================
 
-Here can be found a collection of wiki pages, each providing examples how to
-modify and customize the HDL reference designs.
+Here can be found a collection of documentation pages, each providing examples
+on how to modify the HDL reference designs.
 
--  `A simple BBP for RF Transceivers`_
--  `Model based design for SDR`_
--  `Integrate FIR filters into the FMCOMMS2 HDL design`_
+In case you want the same project for that evaluation board, but you need it
+to be on another FPGA carrier, please take a look at our
+:ref:`porting_project` guide.
 
-.. _A simple BBP for RF Transceivers: https://wiki.analog.com/resources/fpga/docs/hdl/xcomm2ip
+- :ref:`creating_new_ip`
+- :ref:`use_adi_ips`
+- :dokuwiki:`[Wiki] A simple BBP for RF Transceivers <resources/fpga/docs/hdl/xcomm2ip>`
+- :adi:`Model based design for SDR <analog-dialogue/articles/using-model-based-design-sdr-1.html>`
+- :dokuwiki:`[Wiki] Quick system validation with no-OS <resources/fpga/quick_validation>`
 
-.. _Model based design for SDR: https://www.analog.com/en/analog-dialogue/articles/using-model-based-design-sdr-1.html
+Project flow and detailed description example
+-------------------------------------------------------------------------------
 
-.. _Integrate FIR filters into the FMCOMMS2 HDL design: https://wiki.analog.com/resources/fpga/docs/hdl/fmcomms2_fir_filt
+Please check out the example at
+:ref:`FMCOMMS11 HDL project/Detailed description <fmcomms11 detailed-description>`.

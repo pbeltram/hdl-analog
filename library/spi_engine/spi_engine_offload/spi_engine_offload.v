@@ -1,6 +1,6 @@
 // ***************************************************************************
 // ***************************************************************************
-// Copyright (C) 2015-2024 Analog Devices, Inc. All rights reserved.
+// Copyright (C) 2015-2025 Analog Devices, Inc. All rights reserved.
 //
 // In this HDL repository, there are many different and unique modules, consisting
 // of various HDL (Verilog or VHDL) components. The individual modules are
@@ -42,7 +42,8 @@ module spi_engine_offload #(
   parameter CMD_MEM_ADDRESS_WIDTH = 4,
   parameter SDO_MEM_ADDRESS_WIDTH = 4,
   parameter DATA_WIDTH = 8, // Valid data widths values are 8/16/24/32
-  parameter NUM_OF_SDI = 1
+  parameter NUM_OF_SDI = 1,
+  parameter SDO_STREAMING = 0
 ) (
   input ctrl_clk,
 
@@ -73,6 +74,10 @@ module spi_engine_offload #(
   input sdo_data_ready,
   output [(DATA_WIDTH-1):0] sdo_data,
 
+  input [(DATA_WIDTH-1):0] s_axis_sdo_data,
+  output  s_axis_sdo_ready,
+  input   s_axis_sdo_valid,
+
   input sdi_data_valid,
   output sdi_data_ready,
   input [(NUM_OF_SDI * DATA_WIDTH-1):0] sdi_data,
@@ -83,8 +88,13 @@ module spi_engine_offload #(
 
   output offload_sdi_valid,
   input offload_sdi_ready,
-  output [(NUM_OF_SDI * DATA_WIDTH-1):0] offload_sdi_data
+  output [(NUM_OF_SDI * DATA_WIDTH-1):0] offload_sdi_data,
+
+  output interconnect_dir
 );
+
+  localparam SDO_SOURCE_STREAM = 1'b1;
+  localparam SDO_SOURCE_MEM    = 1'b0;
 
   reg spi_active = 1'b0;
 
@@ -95,6 +105,7 @@ module spi_engine_offload #(
 
   reg [15:0] cmd_mem[0:2**CMD_MEM_ADDRESS_WIDTH-1];
   reg [(DATA_WIDTH-1):0] sdo_mem[0:2**SDO_MEM_ADDRESS_WIDTH-1];
+  reg sdo_mem_valid;
 
   reg trigger_last_reg;
 
@@ -102,10 +113,14 @@ module spi_engine_offload #(
   wire [CMD_MEM_ADDRESS_WIDTH-1:0] spi_cmd_rd_addr_next;
   wire spi_enable;
   wire trigger_posedge;
+  wire sdo_source_select;
 
+  assign sdo_source_select = SDO_STREAMING;
   assign cmd_valid = spi_active;
-  assign sdo_data_valid = spi_active;
-
+  assign sdo_data_valid = (sdo_source_select == SDO_SOURCE_STREAM) ?
+                           s_axis_sdo_valid : (spi_active && sdo_mem_valid);
+  assign s_axis_sdo_ready = (sdo_source_select == SDO_SOURCE_STREAM) ?
+                             sdo_data_ready : 1'b0;
   assign offload_sdi_valid = sdi_data_valid;
 
   // we don't want to block the SDI interface after disabling the module
@@ -115,7 +130,8 @@ module spi_engine_offload #(
   assign offload_sdi_data = sdi_data;
 
   assign cmd_int_s = cmd_mem[spi_cmd_rd_addr];
-  assign sdo_data = sdo_mem[spi_sdo_rd_addr];
+  assign sdo_data = (sdo_source_select == SDO_SOURCE_STREAM) ?
+                     s_axis_sdo_data : sdo_mem[spi_sdo_rd_addr];
 
   /* SYNC ID counter. The offload module increments the sync_id on each
    * transaction. The initial value of the sync_id is the value of the last
@@ -200,6 +216,8 @@ module spi_engine_offload #(
   wire ctrl_is_enabled;
   reg spi_enabled = 1'b0;
 
+  assign interconnect_dir = spi_enabled;
+
   always @(posedge ctrl_clk) begin
     if (ctrl_enable) begin
       ctrl_do_enable <= 1'b1;
@@ -235,6 +253,7 @@ module spi_engine_offload #(
   end else begin
   assign spi_enable = ctrl_enable;
   assign ctrl_enabled = spi_enable | spi_active;
+  assign interconnect_dir = ctrl_enabled;
   end endgenerate
 
   assign spi_cmd_rd_addr_next = spi_cmd_rd_addr + 1;
@@ -266,7 +285,7 @@ module spi_engine_offload #(
       if (!spi_active) begin
         // start offload when we have a valid trigger, offload is enabled and
         // the DMA is enabled
-        if (trigger_posedge && spi_enable && offload_sdi_ready)
+        if (trigger_posedge && spi_enable)
           spi_active <= 1'b1;
       end else if (cmd_ready && (spi_cmd_rd_addr_next == ctrl_cmd_wr_addr)) begin
         spi_active <= 1'b0;
@@ -285,8 +304,20 @@ module spi_engine_offload #(
   always @(posedge spi_clk) begin
     if (!spi_active) begin
       spi_sdo_rd_addr <= 'h00;
-    end else if (sdo_data_ready) begin
+    end else if (sdo_data_ready && (sdo_source_select == SDO_SOURCE_MEM)) begin
       spi_sdo_rd_addr <= spi_sdo_rd_addr + 1'b1;
+    end
+  end
+
+  always @(posedge spi_clk) begin
+    if (!spi_resetn) begin
+      sdo_mem_valid <= 1'b0;
+    end else begin
+      if (!spi_active && trigger_posedge && spi_enable) begin
+        sdo_mem_valid <= (ctrl_sdo_wr_addr != 'h00); // if ctrl_sdo_wr_addr is 0, mem is empty
+      end else if (sdo_data_ready && spi_active && sdo_mem_valid && (spi_sdo_rd_addr + 1'b1 == ctrl_sdo_wr_addr))  begin
+        sdo_mem_valid <= 1'b0;
+      end
     end
   end
 

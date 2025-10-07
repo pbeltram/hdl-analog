@@ -1,6 +1,6 @@
 // ***************************************************************************
 // ***************************************************************************
-// Copyright (C) 2014-2024 Analog Devices, Inc. All rights reserved.
+// Copyright (C) 2014-2025 Analog Devices, Inc. All rights reserved.
 //
 // In this HDL repository, there are many different and unique modules, consisting
 // of various HDL (Verilog or VHDL) components. The individual modules are
@@ -149,12 +149,12 @@ module util_axis_fifo #(
           end
           assign m_axis_tlast = axis_tlast_d;
         end else
-          assign m_axis_tlast = 'b0;
+          assign m_axis_tlast = 1'b1;
 
         // TKEEP support
         if (TKEEP_EN) begin
 
-          reg axis_tkeep_d;
+          reg [DATA_WIDTH/8-1:0] axis_tkeep_d;
 
           always @(posedge s_axis_aclk) begin
             if (s_axis_ready == 1'b1 && s_axis_valid == 1'b1)
@@ -162,7 +162,7 @@ module util_axis_fifo #(
           end
           assign m_axis_tkeep = axis_tkeep_d;
         end else
-          assign m_axis_tkeep = {DATA_WIDTH/8{1'b1}};
+          assign m_axis_tkeep = ~0;
 
     end /* zerodeep */
     else
@@ -206,11 +206,11 @@ module util_axis_fifo #(
         end
         assign m_axis_tlast = axis_tlast_d;
       end else
-        assign m_axis_tlast = 'b0;
+        assign m_axis_tlast = 1'b1;
 
       // TKEEP support
       if (TKEEP_EN) begin
-        reg  axis_tkeep_d;
+        reg [DATA_WIDTH/8-1:0] axis_tkeep_d;
 
         always @(posedge s_axis_aclk) begin
           if (!s_axis_aresetn) begin
@@ -221,7 +221,7 @@ module util_axis_fifo #(
         end
         assign m_axis_tkeep = axis_tkeep_d;
       end else
-        assign m_axis_tkeep = {DATA_WIDTH/8{1'b1}};
+        assign m_axis_tkeep = ~0;
 
      end /* !ASYNC_CLK */
 
@@ -289,17 +289,17 @@ module util_axis_fifo #(
     end else if (TKEEP_EN) begin
       assign s_axis_data_int_s = {s_axis_tkeep, s_axis_data};
       assign m_axis_tkeep = m_axis_data_int_s[MEM_WORD-1-:DATA_WIDTH/8];
-      assign m_axis_tlast = 'b0;
+      assign m_axis_tlast = 1'b1;
       assign m_axis_data = m_axis_data_int_s[DATA_WIDTH-1:0];
     end else if (TLAST_EN) begin
       assign s_axis_data_int_s = {s_axis_tlast, s_axis_data};
-      assign m_axis_tkeep = {DATA_WIDTH/8{1'b1}};
+      assign m_axis_tkeep = ~0;
       assign m_axis_tlast = m_axis_data_int_s[DATA_WIDTH];
       assign m_axis_data = m_axis_data_int_s[DATA_WIDTH-1:0];
     end else begin
       assign s_axis_data_int_s = {s_axis_data};
-      assign m_axis_tkeep = {DATA_WIDTH/8{1'b1}};
-      assign m_axis_tlast = 'b0;
+      assign m_axis_tkeep = ~0;
+      assign m_axis_tlast = 1'b1;
       assign m_axis_data = m_axis_data_int_s[DATA_WIDTH-1:0];
     end
 
