@@ -1,0 +1,16 @@
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: hdl-locations-3
+spec:
+  owner: group:default/hdl-sw-team
+  targets:
+  - https://github.com/pbeltram/hdl-analog/tree/backstage_yaml/yaml/project-pulsar_adc-coraz7s-catalog-info.yaml
+  - https://github.com/pbeltram/hdl-analog/tree/backstage_yaml/yaml/project-pulsar_adc-zed-catalog-info.yaml
+  - https://github.com/pbeltram/hdl-analog/tree/backstage_yaml/yaml/project-pulsar_lvds_adc-zed-catalog-info.yaml
+  - https://github.com/pbeltram/hdl-analog/tree/backstage_yaml/yaml/project-xcvr_wizard-kc705-catalog-info.yaml
+  - https://github.com/pbeltram/hdl-analog/tree/backstage_yaml/yaml/project-xcvr_wizard-kcu105-catalog-info.yaml
+  - https://github.com/pbeltram/hdl-analog/tree/backstage_yaml/yaml/project-xcvr_wizard-vcu118-catalog-info.yaml
+  - https://github.com/pbeltram/hdl-analog/tree/backstage_yaml/yaml/project-xcvr_wizard-zc706-catalog-info.yaml
+  - https://github.com/pbeltram/hdl-analog/tree/backstage_yaml/yaml/project-xcvr_wizard-zcu102-catalog-info.yaml
+  type: url
