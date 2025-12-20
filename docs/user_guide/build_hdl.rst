@@ -576,8 +576,38 @@ Running the command below will create a folder named **LVDSCMOSN1**.
 
    make LVDS_CMOS_N=1
 
-Enabling Out-of-Context synthesis
+Available build flags and parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Below are some of the available parameters and system variables that can be used
+when building a project:
+
+- **ADI_EXTRACT_PORTS**: if set, extracts port properties from a predefined list
+  of IPs into 'ports_properties.txt'.
+- **ADI_GENERATE_BIN**: if set, generates a binary bitstream file (.bin)
+  in addition to the .xsa hardware platform.
+- **ADI_GENERATE_UTILIZATION**: if set, generates CSV and log files detailing
+  resource utilization for the design and specific IPs.
+- **ADI_GENERATE_XPA**: if set, runs a Xilinx Power Analysis (XPA) and generates
+  a summary report.
+- **ADI_MAX_OOC_JOBS**: specifies the number of parallel jobs to use for
+  Out-of-Context (OOC) synthesis.
+- **ADI_MAX_THREADS**: specifies the maximum number of threads for Vivado
+  operations. Default value is 8.
+- **ADI_NO_BITSTREAM_COMPRESSION**: if set, disables compression of the final
+  bitstream file.
+- **ADI_POST_ROUTE_POD_PRE_SCRIPT**: specifies the path to a Tcl script to be
+  executed before the phys_opt_design (POD) stage.
+- **ADI_POST_ROUTE_SCRIPT**: specifies the path to a Tcl script to be executed
+  after the routing design step.
+- **ADI_POWER_OPTIMIZATION**: if set to 1, enables power optimization during the
+  implementation run.
+- **ADI_PROJECT_DIR**: specifies a base directory for output files such as logs
+  and reports.
+- **ADI_SKIP_SYNTHESIS**: if set, the entire procedure will exit before starting
+  synthesis.
+- **ADI_USE_OOC_SYNTHESIS**: if set to 1, launches synthesis for OOC IP modules
+  in parallel.
 
 You can opt in for out-of-context synthesis during the build by defining
 the ``ADI_USE_OOC_SYNTHESIS`` system variable. By setting the
@@ -922,7 +952,7 @@ The **sof** file is used to program the device.
 .. warning::
 
    Instantiating IPs in Propel Builder CLI or GUI does not work in WSL for an
-   unknown compatibility reason. You can use WSL/Cygwin on Windows or a normal
+   unknown compatibility reason. You can use Cygwin on Windows or a normal
    Linux installation.
 
 .. warning::
@@ -953,19 +983,25 @@ The **sof** file is used to program the device.
 
 The Lattice build is in a very early version. We are just adding the first
 version of library infrastructure support.
-Currently, we only have a single early-version base design that builds almost
-like the other ones. For Lattice, there are separate tools for creating
-a block design **(Propel Builder)** and building an HDL design **(Radiant)**.
 
-To build a project, go to the carrier folder and run ``make``. For now, you can
-try to build the only base design we have available for
-**CertusPro-NX Evaluation Board** by entering the base design directory and
-running ``make``.
+.. note::
+
+   Currently, we are supporting the
+   `ad738x_fmc <https://analogdevicesinc.github.io/hdl/projects/ad738x_fmc/index.html>`__
+   project for the **LFCPNX-EVN** carrier board, in the
+   `hdl/projects/ad738x_fmc/lfcpnx <https://github.com/analogdevicesinc/hdl/tree/main/projects/ad738x_fmc/lfcpnx>`__ folder.
+   For Lattice, there are separate tools for creating
+   a block design **(Propel Builder)** and building an HDL design **(Radiant)**.
+
+To build a project, go to the carrier folder and run ``make``.
+The **ad738x_fmc** project is available for the
+**CertusPro-NX Evaluation Board** and can be built by entering the
+``hdl/projects/ad738x_fmc/lfcpnx`` directory and running ``make``.
 
 .. shell:: bash
 
    ~/hdl
-   $cd projects/common/lfcpnx
+   $cd projects/ad738x_fmc/lfcpnx
    $make
 
 This assumes that you have the tools and licenses set up correctly.

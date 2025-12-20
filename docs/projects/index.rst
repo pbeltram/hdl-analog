@@ -24,7 +24,7 @@ Contents
    AD35XXR-EVB <ad35xxr_evb/index>
    AD4052-ARDZ <ad4052_ardz/index>
    AD4062-ARDZ <ad4062_ardz/index>
-   AD408X-FMC-EVB <ad408x_fmc_evb/index>
+   AD4080-FMC-EVB <ad4080_fmc_evb/index>
    AD4110-SDZ <ad4110/index>
    AD411x-AD717x <ad411x_ad717x/index>
    AD4134-FMC <ad4134_fmc/index>
@@ -66,6 +66,7 @@ Contents
    ADA4355-FMC <ada4355_fmc/index>
    ADAQ7980-SDZ <adaq7980_sdz/index>
    ADAQ8092-FMC <adaq8092_fmc/index>
+   ADMX100X-EVB <admx100x_evb/index>
    ADMX6001-EBZ <admx6001_ebz/index>
    ADRV9001 <adrv9001/index>
    ADRV9001-DUAL <adrv9001_dual/index>
@@ -95,6 +96,7 @@ Contents
    FMCOMMS8 <fmcomms8/index>
    FMCOMMS11 <fmcomms11/index>
    JUPITER-SDR <jupiter_sdr/index>
+   LTC2378-FMC <ltc2378_fmc/index>
    M2K <m2k/index>
    MAX96724 <max96724/index>
    PLUTO <pluto/index>

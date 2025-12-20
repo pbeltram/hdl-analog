@@ -318,31 +318,141 @@ proc adi_project_create {project_name mode parameter_list device {board "not-app
 
 }
 
-## Add source files to an exiting project.
+## Add source files to an existing project.
 #
 # \param[project_name] - name of the project
 # \param[project_files] - list of project files
 #
 proc adi_project_files {project_name project_files} {
+  global ADI_POST_ROUTE_POD_PRE_SCRIPT
+  global ADI_POST_ROUTE_SCRIPT
 
   foreach pfile $project_files {
     if {[string range $pfile [expr 1 + [string last . $pfile]] end] == "xdc"} {
       add_files -norecurse -fileset constrs_1 $pfile
-    } elseif [regexp "_constr.tcl" $pfile] {
-      add_files -norecurse -fileset sources_1 $pfile
     } else {
       add_files -norecurse -fileset sources_1 $pfile
     }
+  }
+
+  if {[info exists ADI_POST_ROUTE_POD_PRE_SCRIPT]} {
+    add_files -fileset utils_1 -norecurse ${ADI_POST_ROUTE_POD_PRE_SCRIPT}
+  }
+  if {[info exists ADI_POST_ROUTE_SCRIPT]} {
+    add_files -fileset utils_1 -norecurse ${ADI_POST_ROUTE_SCRIPT}
   }
 
   # NOTE: top file name is always system_top
   set_property top system_top [current_fileset]
 }
 
+
+## Function to execute a `make` command for xcvr_wizard project within another project.
+#
+# \param[project_name] - project name for which you want to run make
+# \param[parameters_for_make] - parameters for the make command
+#
+proc adi_xcvr_project {parameters_for_make} {
+
+  global ad_hdl_dir
+
+  set project_name "xcvr_wizard"
+  set current_dir [pwd]
+  set carrier_name [file tail $current_dir]
+
+  switch $carrier_name {
+    "zc706" {
+      set xcvr_type GTXE2
+    }
+    "kc705" {
+      set xcvr_type GTXE2
+    }
+    "zed" {
+      set xcvr_type GTXE2
+    }
+    "vc707" {
+      set xcvr_type GTXE2
+    }
+    "kcu105" {
+      set xcvr_type GTHE3
+    }
+    "zcu102" {
+      set xcvr_type GTHE4
+    }
+    "vcu118" {
+      set xcvr_type GTYE4
+    }
+    "vcu128" {
+      set xcvr_type GTYE4
+    }
+    default {
+      puts "ERROR adi_project_make: Unsupported carrier (device)."
+      return 1
+    }
+  }
+
+  set make_command "make"
+  set adi_project_dir_path [file join $ad_hdl_dir/projects $project_name $carrier_name]
+  cd $adi_project_dir_path
+
+  set adi_dir_env ""
+  if {[info exists ::env(ADI_PROJECT_DIR)] && $::env(ADI_PROJECT_DIR) ne ""} {
+    set adi_dir_env [file tail [string trimright $::env(ADI_PROJECT_DIR) "/"]]
+  }
+
+  if {[llength $parameters_for_make] > 0} {
+
+    set formatted_params {}
+    set gt_xcvr_file {}
+
+    foreach {key value} $parameters_for_make {
+        lappend formatted_params "$key=$value"
+        set key_parsed [string map {"LANE_" "" "_" ""} $key]
+        set value_parrsed [string map {. _} $value]
+        set ad_project_make_params($key) $value_parrsed
+        set tok "${key_parsed}${value_parrsed}"
+
+        if {$adi_dir_env eq "" || ![regexp "(^|_)${tok}(_|$)" $adi_dir_env]} {
+          set gt_xcvr_file [linsert $gt_xcvr_file 0 "$tok"]
+        }
+    }
+
+    append make_command " " [join $formatted_params " "]
+    set gt_xcvr_file [join  $gt_xcvr_file "_"]
+    set config_parser_dir_name "${xcvr_type}_${ad_project_make_params(PLL_TYPE)}_${ad_project_make_params(LANE_RATE)}_${ad_project_make_params(REF_CLK)}"
+    set file_local_param [string tolower $config_parser_dir_name]
+    append file_local_param "_common.v"
+  }
+
+  eval exec $make_command
+  cd $current_dir
+
+  if {$adi_dir_env ne ""} {
+      if {$gt_xcvr_file eq ""} {
+        append adi_project_dir_path "/${::env(ADI_PROJECT_DIR)}${project_name}_${carrier_name}.gen/sources_1/ip/${xcvr_type}_cfng.txt"
+      } else {
+        append adi_project_dir_path "/$gt_xcvr_file\_$::env(ADI_PROJECT_DIR)${project_name}_${carrier_name}.gen/sources_1/ip/${xcvr_type}_cfng.txt"
+      }
+  } else {
+      append adi_project_dir_path "/$gt_xcvr_file/${project_name}_${carrier_name}.gen/sources_1/ip/${xcvr_type}_cfng.txt"
+  }
+
+  set config_dir_path [file dirname $adi_project_dir_path]
+  set file_local_param_path ""
+
+  if {$xcvr_type == "GTXE2"} {
+    set file_local_param_path [file join $config_dir_path $config_parser_dir_name $file_local_param]
+  }
+
+  return [dict create "cfng_file_path" $adi_project_dir_path "param_file_path" $file_local_param_path]
+}
+
 ## Run an existing project (generate bit stream).
 #
 # \param[project_name] - name of the project
 #
+# Additional configuration flags are documented in docs/user_guide/build_hdl.rst
+# at the "Available build flags and parameters" section.
 proc adi_project_run {project_name} {
 
   global ad_project_dir
@@ -351,6 +461,13 @@ proc adi_project_run {project_name} {
   global ADI_USE_OOC_SYNTHESIS
   global ADI_MAX_OOC_JOBS
   global ADI_GENERATE_BIN
+  global ADI_POST_ROUTE_POD_PRE_SCRIPT
+  global ADI_POST_ROUTE_SCRIPT
+
+  if {[info exists ::env(ADI_MAX_THREADS)]} {
+    set_param general.maxThreads ${::env(ADI_MAX_THREADS)}
+    puts "INFO: maxThreads set to ${::env(ADI_MAX_THREADS)}"
+  }
 
   if {![info exists ::env(ADI_PROJECT_DIR)]} {
     set actual_project_name $project_name
@@ -383,6 +500,14 @@ proc adi_project_run {project_name} {
   }
 
   set_param board.repoPaths [get_property LOCAL_ROOT_DIR [xhub::get_xstores xilinx_board_store]]
+
+  if {[info exists ADI_POST_ROUTE_POD_PRE_SCRIPT]} {
+    set_property STEPS.POST_ROUTE_PHYS_OPT_DESIGN.IS_ENABLED true [get_runs impl_1]
+    set_property STEPS.POST_ROUTE_PHYS_OPT_DESIGN.TCL.PRE [ get_files ${ADI_POST_ROUTE_POD_PRE_SCRIPT} -of [get_fileset utils_1] ] [get_runs impl_1]
+  }
+  if {[info exists ADI_POST_ROUTE_SCRIPT]} {
+    set_property STEPS.ROUTE_DESIGN.TCL.POST [ get_files ${ADI_POST_ROUTE_SCRIPT} -of [get_fileset utils_1] ] [get_runs impl_1]
+  }
 
   launch_runs impl_1 -to_step write_bitstream
   wait_on_run impl_1
